@@ -16,9 +16,14 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get install -y sshpass
 
-      - name: Check if SSH_PASSWORD is correctly loaded
+      - name: Check if SSH_PASSWORD is correctly loaded (safe test)
         run: |
-          echo "SSH Password: $SSH_PASSWORD"  # Печать пароля в консоль для проверки
+          if [ -z "$SSH_PASSWORD" ]; then
+            echo "SSH_PASSWORD is empty!"
+            exit 1
+          else
+            echo "SECRET_LOADED: SSH_PASSWORD is loaded successfully"
+          fi
         env:
           SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
 
