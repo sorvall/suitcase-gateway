@@ -1,4 +1,4 @@
-name: Check SSH Connection
+name: Deploy to Server
 
 on:
   push:
@@ -6,23 +6,18 @@ on:
       - main
 
 jobs:
-  ssh-check:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          # Проверим содержимое ключа (если это необходимо для диагностики)
-          cat ~/.ssh/id_rsa
-          # Добавляем сервер в known_hosts для предотвращения ошибок с хостом
-          ssh-keyscan -H 103.74.93.74 >> ~/.ssh/known_hosts
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
 
-      - name: Test SSH connection
+      - name: Set up SSH password authentication and deploy
         run: |
-          ssh -i ~/.ssh/id_rsa -v -o StrictHostKeyChecking=no root@103.74.93.74 'echo "SSH connection successful!"'
+          echo "$SSH_PASSWORD" | sshpass ssh -o StrictHostKeyChecking=no root@103.74.93.74 "echo 'SSH connection successful!' && cd /path/to/your/project && git pull origin main"
+        env:
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
