@@ -50,5 +50,13 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd /root/suitcase-app/gateway
+
+            # Остановить и удалить старый контейнер, если он существует
+            docker stop suitcase-gateway-container || true
+            docker rm suitcase-gateway-container || true
+
+            # Построить новый образ
             docker build -t suitcase-gateway .
+
+            # Запустить новый контейнер
             docker run -d -p 8080:8080 --name suitcase-gateway-container suitcase-gateway
