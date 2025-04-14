@@ -29,6 +29,6 @@ jobs:
 
       - name: Set up SSH password authentication and deploy
         run: |
-          echo "$SSH_PASSWORD" | sshpass ssh -o StrictHostKeyChecking=no root@103.74.93.74 "echo 'SSH connection successful!' && cd /path/to/your/project && git pull origin main"
+          echo "$SSH_PASSWORD" | sshpass ssh -o StrictHostKeyChecking=no root@103.74.93.74 "echo 'SSH connection successful!' && cd /root/suitcase-app/gateway"
         env:
           SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
