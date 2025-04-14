@@ -18,8 +18,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          # Проверим содержимое ключа (если это необходимо для диагностики)
+          cat ~/.ssh/id_rsa
+          # Добавляем сервер в known_hosts для предотвращения ошибок с хостом
           ssh-keyscan -H 103.74.93.74 >> ~/.ssh/known_hosts
 
       - name: Test SSH connection
         run: |
-          ssh -o StrictHostKeyChecking=no root@103.74.93.74 'echo "SSH connection successful!"'
+          ssh -i ~/.ssh/id_rsa -v -o StrictHostKeyChecking=no root@103.74.93.74 'echo "SSH connection successful!"'
