@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: suitcase-gateway
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_UNIQUE
+      routes:
+        - id: rental-service
+          uri: http://rental:8081
+          predicates:
+            - Path=/rental/**
+          filters:
+            - StripPrefix=1
+            - JwtAuthFilter
+
+        - id: storage-service
+          uri: http://storage:8082
+          predicates:
+            - Path=/storage/**
+          filters:
+            - StripPrefix=1
+            - JwtAuthFilter
+
+        - id: auth-service
+          uri: http://keycloak:8080
+          predicates:
+            - Path=/auth/**
