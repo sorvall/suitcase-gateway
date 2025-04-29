@@ -1,25 +1,41 @@
+/*
 package ru.sorokin.gateway.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
+        http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/public/**", "/actuator/**").permitAll()
+                        .requestMatchers("/login", "/test", "/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults())
+                .oauth2Client(withDefaults())  // Настройка OAuth2 Client (замена oauth2Login)
+                .formLogin(form -> form
+                        .defaultSuccessUrl("/test", true)  // Перенаправление после успешного входа
+                        .failureUrl("/login?error=true")         // Страница при ошибке входа
                 )
-                .build();
+                .exceptionHandling(ex -> ex
+                        .accessDeniedPage("/access-denied")  // (Опционально) Обработка 403
+                );
+
+        return http.build();
     }
-}
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(); // Рекомендуется использовать BCrypt
+    }
+}*/

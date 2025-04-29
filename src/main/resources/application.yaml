@@ -3,26 +3,37 @@ spring:
     name: suitcase-gateway
   cloud:
     gateway:
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_UNIQUE
       routes:
-        - id: rental-service
-          uri: http://rental:8081
+        - id: suitcase-booking
+          uri: http://localhost:8081
           predicates:
-            - Path=/rental/**
-          filters:
-            - StripPrefix=1
-            - JwtAuthFilter
+            - Path=/booking/**
 
-        - id: storage-service
-          uri: http://storage:8082
+        - id: suitcase-booking
+          uri: http://localhost:8081
           predicates:
-            - Path=/storage/**
-          filters:
-            - StripPrefix=1
-            - JwtAuthFilter
+            - Path=/availability/**
 
-        - id: auth-service
-          uri: http://keycloak:8080
-          predicates:
-            - Path=/auth/**
+
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: your-client-id
+            client-secret: your-client-secret
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/keycloak"  # ???????? ???????? ?? ???? URL
+            scope: openid
+            authorization-uri: http://localhost:8282/realms/suitcase/protocol/openid-connect/auth
+            token-uri: http://localhost:8282/realms/suitcase/protocol/openid-connect/token
+            user-info-uri: http://localhost:8282/realms/suitcase/protocol/openid-connect/userinfo
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8282/realms/suitcase
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
