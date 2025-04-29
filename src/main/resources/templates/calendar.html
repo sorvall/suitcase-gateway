@@ -443,8 +443,22 @@
 
         // Установка минимальной даты (сегодня)
         const today = new Date().toISOString().split('T')[0];
-        document.getElementById("startDate").min = today;
-        document.getElementById("endDate").min = today;
+        const startDateInput = document.getElementById("startDate");
+        const endDateInput = document.getElementById("endDate");
+
+        startDateInput.min = today;
+        endDateInput.min = today;
+
+        // Обновление минимальной даты окончания при изменении даты начала
+        startDateInput.addEventListener('change', function() {
+            if (this.value) {
+                endDateInput.min = this.value;
+                // Если текущее значение даты окончания меньше новой даты начала, сбрасываем его
+                if (endDateInput.value && endDateInput.value < this.value) {
+                    endDateInput.value = '';
+                }
+            }
+        });
 
         // Улучшенная маска для телефона с автоматическим перемещением курсора
         const phoneInput = document.getElementById('phone');
@@ -569,8 +583,8 @@
 
         // Проверка доступности чемоданов
         async function checkAvailability() {
-            const startDate = document.getElementById("startDate").value;
-            const endDate = document.getElementById("endDate").value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
             const resultContainer = document.getElementById("availabilityResult");
 
             if (!startDate || !endDate || !resultContainer) return;
@@ -606,8 +620,8 @@
         document.getElementById("bookingForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             const uuid = document.getElementById("uuidInput").value;
-            const startDate = document.getElementById("startDate").value;
-            const endDate = document.getElementById("endDate").value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
             const fullName = document.getElementById("fullName").value;
             const phoneNumber = document.getElementById("phone").value;
             const resultContainer = document.getElementById("bookingResult");
