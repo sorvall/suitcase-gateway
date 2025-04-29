@@ -5,12 +5,12 @@ spring:
     gateway:
       routes:
         - id: suitcase-booking
-          uri: http://localhost:8081
+          uri: http://103.74.93.74:8081
           predicates:
             - Path=/booking/**
 
         - id: suitcase-booking
-          uri: http://localhost:8081
+          uri: http://103.74.93.74:8081
           predicates:
             - Path=/availability/**
 
