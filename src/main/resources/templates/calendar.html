@@ -1011,7 +1011,7 @@
                 const statusText = getStatusText(status);
 
                 const now = new Date();
-                const paymentDeadline = new Date(now.getTime() + 10 * 60000);
+                const paymentDeadline = new Date(now.getTime() + 3600000);
                 const deadlineString = paymentDeadline.toLocaleTimeString('ru-RU', {
                     hour: '2-digit',
                     minute: '2-digit'
@@ -1027,7 +1027,7 @@
                     statusHtml += `
                         <div class="payment-section">
                             <div class="payment-info">
-                                <p>Необходимо перевести 500 рублей предоплаты по номеру 8 965 4087</p>
+                                <p>Менеджер свяжется с Вами в ближайшее время</p>
                                 <p>Срок оплаты: до ${deadlineString}</p>
                             </div>
                         </div>
