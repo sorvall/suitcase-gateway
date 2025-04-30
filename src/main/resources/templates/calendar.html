@@ -168,8 +168,7 @@
         }
 
         #uuidInput {
-            background-color: #f1f3f6;
-            cursor: not-allowed;
+            display: none; /* Скрываем поле ввода ID чемодана */
         }
 
         button {
@@ -555,11 +554,8 @@
             <h2>Оформление бронирования</h2>
 
             <form id="bookingForm">
-                <div class="form-group">
-                    <label for="uuidInput">Выберите чемодан:</label>
-                    <input type="text" id="uuidInput" name="uuid" required disabled
-                           placeholder="Дважды кликните на ID чемодана">
-                </div>
+                <!-- Убрали заголовок и скрыли поле ввода, но оставили в форме -->
+                <input type="text" id="uuidInput" name="uuid" required disabled style="display: none;">
 
                 <div class="form-group">
                     <label for="fullName">Ваше имя:</label>
@@ -848,6 +844,7 @@
             const endDate = endDateInput.value;
             const resultContainer = document.getElementById("availabilityResult");
             const bookingSection = document.getElementById("bookingSection");
+            const uuidInput = document.getElementById("uuidInput");
 
             if (!startDate || !endDate || !resultContainer) return;
 
@@ -904,7 +901,7 @@
             }
 
             if (!uuid) {
-                resultContainer.innerHTML = "<p style='color: var(--danger-color);'>Выберите чемодан из списка!</p>";
+                resultContainer.innerHTML = "<p style='color: var(--danger-color);'>Нет доступного чемодана для бронирования!</p>";
                 resultContainer.className = "status-box show";
                 return;
             }
