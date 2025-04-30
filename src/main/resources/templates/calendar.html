@@ -443,6 +443,20 @@
             margin-bottom: 8px;
         }
 
+        .booking-section {
+            display: none;
+        }
+
+        .booking-section.show {
+            display: block;
+        }
+
+        .available-message {
+            color: var(--success-color);
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 30px 20px;
@@ -538,7 +552,7 @@
 
         <hr>
 
-        <section>
+        <section id="bookingSection" class="booking-section">
             <h2>Оформление бронирования</h2>
 
             <form id="bookingForm">
@@ -833,16 +847,19 @@
             const startDate = startDateInput.value;
             const endDate = endDateInput.value;
             const resultContainer = document.getElementById("availabilityResult");
+            const bookingSection = document.getElementById("bookingSection");
 
             if (!startDate || !endDate || !resultContainer) return;
 
             if (endDate < startDate) {
                 resultContainer.innerHTML = "<p style='color: var(--danger-color);'>Дата окончания не может быть раньше даты начала!</p>";
+                bookingSection.classList.remove("show");
                 return;
             }
 
             try {
                 resultContainer.innerHTML = "<div class='loading'></div><p>Проверяем доступность...</p>";
+                bookingSection.classList.remove("show");
 
                 const response = await fetch(`/availability?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`);
 
@@ -854,6 +871,7 @@
                 displayAvailableItems(data);
             } catch (error) {
                 resultContainer.innerHTML = `<p style='color: var(--danger-color);'>Ошибка: ${error.message}</p>`;
+                bookingSection.classList.remove("show");
                 console.error("Ошибка при проверке доступности:", error);
             }
         }
@@ -1023,35 +1041,36 @@
             switchTab(statusTab);
         }
 
-        function displayAvailableItems(items) {
+        function displayAvailableItems(item) {
             const container = document.getElementById("availabilityResult");
-            if (!container) {
-                console.error("Контейнер для доступных чемоданов не найден");
+            const bookingSection = document.getElementById("bookingSection");
+            const uuidInput = document.getElementById("uuidInput");
+
+            if (!container || !bookingSection || !uuidInput) {
+                console.error("Не найдены необходимые элементы для отображения доступных чемоданов");
                 return;
             }
 
-            container.innerHTML = "<h3>Доступные чемоданы:</h3>";
+            container.innerHTML = "";
 
-            if (!items || items.length === 0) {
-                container.innerHTML += "<p>Нет доступных вариантов</p>";
+            if (!item || !item.id) {
+                container.innerHTML = "<p>Нет доступных вариантов</p>";
+                bookingSection.classList.remove("show");
                 return;
             }
 
-            items.forEach(item => {
-                if (!item.id) return;
+            // Показываем сообщение о доступности
+            container.innerHTML = `
+                <p class="available-message">Чемодан доступен в выбранные даты</p>
+                <p>ID чемодана: <strong>${item.id}</strong></p>
+            `;
 
-                const elem = document.createElement("div");
-                elem.className = "id-item";
-                elem.textContent = item.id;
-                elem.addEventListener("dblclick", function() {
-                    const uuidInput = document.getElementById("uuidInput");
-                    if (uuidInput) {
-                        uuidInput.value = item.id;
-                        uuidInput.disabled = false;
-                    }
-                });
-                container.appendChild(elem);
-            });
+            // Автоматически подставляем значение в поле выбора чемодана
+            uuidInput.value = item.id;
+            uuidInput.disabled = false;
+
+            // Показываем секцию бронирования
+            bookingSection.classList.add("show");
         }
 
         function showStatusError(container, message) {
