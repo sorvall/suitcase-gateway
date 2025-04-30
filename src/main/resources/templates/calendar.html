@@ -309,7 +309,6 @@
             border-top: 1px dashed #dfe6e9;
         }
 
-        /* Стили для карусели */
         .carousel {
             position: relative;
             max-width: 600px;
@@ -520,7 +519,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>Аренда чемоданов</h1>
+    <h1>Аренда чемоданов в Москве</h1>
 
     <div class="tabs">
         <div class="tab active" data-tab="main">Аренда</div>
@@ -739,7 +738,7 @@
             startCarouselInterval();
         });
 
-        // Остальной JavaScript код
+        // Обработка ввода телефона
         const phoneInput = document.getElementById('phone');
         if (phoneInput) {
             phoneInput.addEventListener('input', function(e) {
@@ -843,6 +842,7 @@
             });
         }
 
+        // Проверка доступности чемоданов
         async function checkAvailability() {
             const startDate = startDateInput.value;
             const endDate = endDateInput.value;
@@ -863,6 +863,13 @@
 
                 const response = await fetch(`/availability?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`);
 
+                if (response.status === 204) {
+                    // Нет доступных чемоданов
+                    resultContainer.innerHTML = "<p>Нет доступных вариантов на выбранные даты</p>";
+                    bookingSection.classList.remove("show");
+                    return;
+                }
+
                 if (!response.ok) {
                     throw new Error(`Ошибка сервера: ${response.status}`);
                 }
@@ -881,6 +888,7 @@
             checkAvailability();
         });
 
+        // Оформление бронирования
         document.getElementById("bookingForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             const uuid = document.getElementById("uuidInput").value;
@@ -969,6 +977,7 @@
             }
         });
 
+        // Проверка статуса заказа
         document.getElementById("checkOrderBtn").addEventListener("click", function() {
             const uuid = document.getElementById("checkUuidInput").value.trim();
             if (!uuid) {
