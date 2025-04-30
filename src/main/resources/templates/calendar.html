@@ -80,10 +80,11 @@
             justify-content: center;
             position: relative;
             z-index: 1;
+            flex-wrap: wrap;
         }
 
         .tab {
-            padding: 12px 30px;
+            padding: 12px 20px;
             cursor: pointer;
             border: none;
             background: transparent;
@@ -307,6 +308,105 @@
             border-top: 1px dashed #dfe6e9;
         }
 
+        /* Стили для карусели */
+        .carousel {
+            position: relative;
+            max-width: 600px;
+            margin: 30px auto;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        .carousel-inner {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .carousel-item {
+            min-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .carousel-item img {
+            width: 100%;
+            display: block;
+            border-radius: var(--border-radius);
+        }
+
+        .carousel-control {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            border: none;
+            color: var(--primary-color);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .carousel-control.prev {
+            left: 15px;
+        }
+
+        .carousel-control.next {
+            right: 15px;
+        }
+
+        .carousel-indicators {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .carousel-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            border: none;
+        }
+
+        .carousel-indicator.active {
+            background-color: white;
+        }
+
+        .description {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            line-height: 1.6;
+        }
+
+        .description p {
+            margin-bottom: 15px;
+        }
+
+        .description ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .description li {
+            margin-bottom: 8px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 30px 20px;
@@ -317,8 +417,12 @@
             }
 
             .tab {
-                padding: 10px 20px;
+                padding: 10px 15px;
                 font-size: 14px;
+            }
+
+            .carousel {
+                max-width: 100%;
             }
         }
 
@@ -340,6 +444,16 @@
             button {
                 padding: 12px 25px;
             }
+
+            .tabs {
+                justify-content: space-around;
+            }
+
+            .tab {
+                margin: 0;
+                padding: 10px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
@@ -349,6 +463,7 @@
 
     <div class="tabs">
         <div class="tab active" data-tab="main">Аренда</div>
+        <div class="tab" data-tab="info">О чемодане</div>
         <div class="tab" data-tab="status">Проверка статуса</div>
     </div>
 
@@ -409,6 +524,45 @@
         </section>
     </div>
 
+    <!-- Вкладка с информацией о чемодане -->
+    <div id="info" class="tab-content">
+        <div class="description">
+            <h2>🚴‍♂️ Велочемодан для транспортировки велосипеда</h2>
+            <p>Предлагается в аренду велочемодан для транспортировки велосипеда.</p>
+            <p>По сумме сторон не превышает 203 см, можно сдать в багаж без дополнительной оплаты (уточняйте в авиакомпании или в аэропорте).</p>
+            <p>В чемодан помещается:</p>
+            <ul>
+                <li>Велосипед</li>
+                <li>Колёса</li>
+                <li>Насос</li>
+                <li>Шлем</li>
+                <li>Другое велооборудование</li>
+            </ul>
+            <p>❗ В чемодан помещаются все виды велосипедов, необходимо проверить размеры, указанные на фото.</p>
+        </div>
+
+        <div class="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item">
+                    <img src="images/1.jpeg" alt="Велочемодан - фото 1">
+                </div>
+                <div class="carousel-item">
+                    <img src="images/2.jpeg" alt="Велочемодан - фото 2">
+                </div>
+                <div class="carousel-item">
+                    <img src="images/3.jpeg" alt="Велочемодан - фото 3">
+                </div>
+            </div>
+            <button class="carousel-control prev">❮</button>
+            <button class="carousel-control next">❯</button>
+            <div class="carousel-indicators">
+                <button class="carousel-indicator active"></button>
+                <button class="carousel-indicator"></button>
+                <button class="carousel-indicator"></button>
+            </div>
+        </div>
+    </div>
+
     <!-- Вкладка проверки статуса -->
     <div id="status" class="tab-content">
         <div class="form-group">
@@ -428,16 +582,25 @@
     document.addEventListener("DOMContentLoaded", function() {
         // Инициализация вкладок
         const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // Функция для переключения вкладок
+        function switchTab(tabElement) {
+            // Удаляем active у всех вкладок
+            tabs.forEach(t => t.classList.remove('active'));
+            // Удаляем active у всего контента
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            // Активируем текущую вкладку
+            tabElement.classList.add('active');
+            const tabId = tabElement.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Назначаем обработчики клика на все вкладки
         tabs.forEach(tab => {
             tab.addEventListener('click', function() {
-                // Удаляем active у всех вкладок и контента
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-                // Активируем текущую вкладку
-                this.classList.add('active');
-                const tabId = this.getAttribute('data-tab');
-                document.getElementById(tabId).classList.add('active');
+                switchTab(this);
             });
         });
 
@@ -458,6 +621,62 @@
                     endDateInput.value = '';
                 }
             }
+        });
+
+        // Инициализация карусели
+        const carouselInner = document.querySelector('.carousel-inner');
+        const carouselItems = document.querySelectorAll('.carousel-item');
+        const prevBtn = document.querySelector('.carousel-control.prev');
+        const nextBtn = document.querySelector('.carousel-control.next');
+        const indicators = document.querySelectorAll('.carousel-indicator');
+
+        let currentIndex = 0;
+        const itemCount = carouselItems.length;
+
+        function updateCarousel() {
+            carouselInner.style.transform = `translateX(-${currentIndex * 100}%)`;
+
+            // Обновляем индикаторы
+            indicators.forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentIndex);
+            });
+        }
+
+        prevBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + itemCount) % itemCount;
+            updateCarousel();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % itemCount;
+            updateCarousel();
+        });
+
+        // Клик по индикаторам
+        indicators.forEach((indicator, index) => {
+            indicator.addEventListener('click', () => {
+                currentIndex = index;
+                updateCarousel();
+            });
+        });
+
+        // Автоматическое перелистывание каждые 5 секунд
+        let carouselInterval = setInterval(() => {
+            currentIndex = (currentIndex + 1) % itemCount;
+            updateCarousel();
+        }, 5000);
+
+        // Остановка автоматического перелистывания при наведении
+        const carousel = document.querySelector('.carousel');
+        carousel.addEventListener('mouseenter', () => {
+            clearInterval(carouselInterval);
+        });
+
+        carousel.addEventListener('mouseleave', () => {
+            carouselInterval = setInterval(() => {
+                currentIndex = (currentIndex + 1) % itemCount;
+                updateCarousel();
+            }, 5000);
         });
 
         // Улучшенная маска для телефона с автоматическим перемещением курсора
@@ -785,11 +1004,8 @@
 
         // Переключение на вкладку проверки статуса
         function switchToStatusTab() {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-            document.querySelector('.tab[data-tab="status"]').classList.add('active');
-            document.getElementById('status').classList.add('active');
+            const statusTab = document.querySelector('.tab[data-tab="status"]');
+            switchTab(statusTab);
         }
 
         // Отображение доступных чемоданов
