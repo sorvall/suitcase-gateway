@@ -1,6 +1,7 @@
 spring:
   application:
     name: suitcase-gateway
+
   cloud:
     gateway:
       routes:
@@ -37,3 +38,6 @@ spring:
     suffix: .html
     mode: HTML
     encoding: UTF-8
+server:
+  address: 0.0.0.0
+  port: 80
