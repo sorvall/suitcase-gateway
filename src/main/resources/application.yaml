@@ -1,4 +1,7 @@
 spring:
+  boot:
+    admin:
+      context-path: /admin
   application:
     name: suitcase-gateway
 
