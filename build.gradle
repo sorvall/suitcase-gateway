@@ -33,6 +33,7 @@ dependencies {
 	//implementation 'org.springframework.security:spring-security-oauth2-client'
 
 	//developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	implementation("de.codecentric:spring-boot-admin-starter-server:3.2.1")
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
