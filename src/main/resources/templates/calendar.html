@@ -4,7 +4,7 @@
     <link rel="icon" type="image/png" href="/images/favicon-32x32.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Надёжные чемоданы для безопасной транспортировки велосипедов в самолёте</title>
+    <title>Аренда велочемоданов | Безопасная перевозка велосипедов в самолёте</title>
     <style>
         :root {
             --primary-color: #FFCC00;
@@ -34,45 +34,50 @@
             line-height: 1.5;
             padding: 0;
             min-height: 100vh;
-            background-image: none;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            padding: 24px 0;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+
+        .header-subtitle {
+            font-size: 16px;
+            color: rgba(0,0,0,0.7);
+            max-width: 600px;
+            margin: 0 auto;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
-            padding: 24px;
-            background-color: white;
-            border-radius: 0;
-            box-shadow: none;
+            padding: 0 24px 24px;
             position: relative;
-            overflow: hidden;
-            border: none;
         }
 
-        h1, h2, h3 {
+        h2, h3 {
             color: var(--secondary-color);
             text-align: center;
             margin-bottom: 20px;
             position: relative;
             z-index: 1;
             font-weight: 500;
-        }
-
-        h1 {
-            font-size: 28px;
-            margin-bottom: 24px;
-            letter-spacing: -0.3px;
-            font-weight: 700;
-        }
-
-        h1::after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 3px;
-            background: var(--primary-color);
-            margin: 12px auto 0;
-            border-radius: 2px;
         }
 
         .tabs {
@@ -474,12 +479,20 @@
         }
 
         @media (max-width: 768px) {
-            .container {
-                padding: 16px;
+            .header {
+                padding: 20px 0;
             }
 
-            h1 {
+            .header-title {
                 font-size: 24px;
+            }
+
+            .header-subtitle {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 0 16px 16px;
             }
 
             .tab {
@@ -503,12 +516,16 @@
         }
 
         @media (max-width: 480px) {
-            .container {
-                padding: 12px;
+            .header {
+                padding: 16px 0;
             }
 
-            h1 {
+            .header-title {
                 font-size: 22px;
+            }
+
+            .container {
+                padding: 0 12px 12px;
             }
 
             input[type="date"],
@@ -533,9 +550,14 @@
     </style>
 </head>
 <body>
-<div class="container">
-    <h1>Надёжные чемоданы для безопасной транспортировки велосипедов в самолёте</h1>
+<div class="header">
+    <div class="header-content">
+        <h1 class="header-title">Аренда велочемоданов</h1>
+        <p class="header-subtitle">Надёжная защита вашего велосипеда при авиаперелётах</p>
+    </div>
+</div>
 
+<div class="container">
     <div class="tabs">
         <div class="tab active" data-tab="main">Аренда</div>
         <div class="tab" data-tab="info">О чемодане</div>
