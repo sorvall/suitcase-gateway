@@ -7,15 +7,6 @@ spring:
         url: http://bikeboxgo.ru  # Адрес сервера SBA
         instance:
           name: suitcase-gateway  # Уникальное имя для каждого сервиса!
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, info, metrics, env, loggers
-  endpoint:
-    health:
-      show-details: always
-
   cloud:
     gateway:
       routes:
@@ -37,3 +28,12 @@ management:
 server:
   address: 0.0.0.0
   port: 80
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, env, loggers
+  endpoint:
+    health:
+      show-details: always
