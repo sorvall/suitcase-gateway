@@ -1,9 +1,20 @@
 spring:
-  boot:
-    admin:
-      context-path: /admin
   application:
     name: suitcase-gateway
+  boot:
+    admin:
+      client:
+        url: http://suitcase-admin:8085  # Адрес сервера SBA
+        instance:
+          name: suitcase-gateway  # Уникальное имя для каждого сервиса!
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, env, loggers
+  endpoint:
+    health:
+      show-details: always
 
   cloud:
     gateway:
@@ -17,24 +28,6 @@ spring:
           uri: http://103.74.93.74:8081
           predicates:
             - Path=/availability/**
-
-
-  security:
-    oauth2:
-      client:
-        registration:
-          keycloak:
-            client-id: your-client-id
-            client-secret: your-client-secret
-            authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:8080/login/oauth2/code/keycloak"  # ???????? ???????? ?? ???? URL
-            scope: openid
-            authorization-uri: http://localhost:8282/realms/suitcase/protocol/openid-connect/auth
-            token-uri: http://localhost:8282/realms/suitcase/protocol/openid-connect/token
-            user-info-uri: http://localhost:8282/realms/suitcase/protocol/openid-connect/userinfo
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:8282/realms/suitcase
 
   thymeleaf:
     prefix: classpath:/templates/
