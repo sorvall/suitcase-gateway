@@ -516,6 +516,90 @@
             text-decoration: none;
         }
 
+        /* Модальное окно */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 90%;
+            max-width: 400px;
+            padding: 24px;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .modal-content {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            flex: 1;
+            max-width: 120px;
+        }
+
+        .modal-btn-primary {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+
+        .modal-btn-primary:hover {
+            background-color: var(--accent-color);
+        }
+
+        .modal-btn-secondary {
+            background-color: #E6E6E6;
+            color: var(--secondary-color);
+        }
+
+        .modal-btn-secondary:hover {
+            background-color: #D9D9D9;
+        }
+
         @media (max-width: 768px) {
             .header {
                 padding: 16px 0;
@@ -550,6 +634,10 @@
             .carousel-control::before {
                 width: 18px;
                 height: 18px;
+            }
+
+            .modal {
+                padding: 20px;
             }
         }
 
@@ -588,6 +676,15 @@
                 padding: 8px;
                 font-size: 14px;
             }
+
+            .modal-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .modal-btn {
+                max-width: 100%;
+            }
         }
     </style>
     <!-- Иконка Telegram для кнопки -->
@@ -600,7 +697,7 @@
         <h1 class="header-title">Аренда велочемоданов</h1>
         <p class="header-subtitle">Надёжная защита вашего велосипеда при авиаперелётах</p>
         <div class="header-contact">
-            <a href="https://t.me/Dear_V_S" class="contact-link" target="_blank">
+            <a href="https://t.me/bikeboxgo" class="contact-link" target="_blank">
                 <i class="fab fa-telegram"></i>
                 @bikeboxgo
             </a>
@@ -682,7 +779,7 @@
                 <li>Доставка и помощь с упаковкой</li>
             </ul>
             <p>Идеальное решение для соревнований, велопутешествий и переездов. Ваш велосипед прибудет в целости и сохранности!</p>
-            <p>Телефон для связи: <a href="https://t.me/Dear_V_S" class="contact-phone" target="_blank">
+            <p>Телефон для связи: <a href="https://t.me/bikeboxgo" class="contact-phone" target="_blank">
                 <i class="fab fa-telegram"></i> 8 (965) 408-07-54
             </a></p>
         </div>
@@ -729,6 +826,20 @@
 
         <div id="checkOrderResult" class="status-box">
             <div id="orderStatusContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для подтверждения доставки -->
+<div class="modal-overlay" id="deliveryModal">
+    <div class="modal">
+        <h3 class="modal-title">Нужна доставка велочемодана?</h3>
+        <div class="modal-content">
+            <p>Пожалуйста, уточните, требуется ли Вам доставка велочемодана? Доставка осуществляется по г. Москва, стоимость 750 рублей.</p>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-primary" id="confirmDeliveryBtn">Да</button>
+            <button class="modal-btn modal-btn-secondary" id="cancelDeliveryBtn">Нет</button>
         </div>
     </div>
 </div>
@@ -983,9 +1094,40 @@
             checkAvailability();
         });
 
-        // Оформление бронирования
-        document.getElementById("bookingForm").addEventListener("submit", async function(e) {
+        // Модальное окно для подтверждения доставки
+        const deliveryModal = document.getElementById('deliveryModal');
+        const confirmDeliveryBtn = document.getElementById('confirmDeliveryBtn');
+        const cancelDeliveryBtn = document.getElementById('cancelDeliveryBtn');
+        let extraServiceValue = false;
+
+        function showDeliveryModal() {
+            deliveryModal.classList.add('active');
+        }
+
+        function hideDeliveryModal() {
+            deliveryModal.classList.remove('active');
+        }
+
+        confirmDeliveryBtn.addEventListener('click', function() {
+            extraServiceValue = true;
+            hideDeliveryModal();
+            processBooking();
+        });
+
+        cancelDeliveryBtn.addEventListener('click', function() {
+            extraServiceValue = false;
+            hideDeliveryModal();
+            processBooking();
+        });
+
+        // Обработчик отправки формы бронирования
+        document.getElementById("bookingForm").addEventListener("submit", function(e) {
             e.preventDefault();
+            showDeliveryModal();
+        });
+
+        // Функция для обработки бронирования после выбора опции доставки
+        async function processBooking() {
             const uuid = document.getElementById("uuidInput").value;
             const startDate = startDateInput.value;
             const endDate = endDateInput.value;
@@ -1026,7 +1168,8 @@
                     startDate: startDate,
                     endDate: endDate,
                     fullName: fullName,
-                    phoneNumber: phoneNumber
+                    phoneNumber: phoneNumber,
+                    extraService: extraServiceValue
                 };
 
                 const response = await fetch('/booking', {
@@ -1049,6 +1192,7 @@
                         <p>Период: ${formatDate(startDate)} — ${formatDate(endDate)}</p>
                         <p>Имя: ${fullName}</p>
                         <p>Телефон: ${phoneNumber}</p>
+                        <p>Доставка: ${extraServiceValue ? 'Да' : 'Нет'}</p>
                     `;
                 resultContainer.className = "status-box confirmed show";
 
@@ -1070,7 +1214,7 @@
                 resultContainer.className = "status-box show";
                 console.error("Ошибка при бронировании:", error);
             }
-        });
+        }
 
         // Проверка статуса заказа
         document.getElementById("checkOrderBtn").addEventListener("click", function() {
