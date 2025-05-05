@@ -39,6 +39,8 @@
             line-height: 1.5;
             padding: 0;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
@@ -107,6 +109,7 @@
             margin: 0 auto;
             padding: 0 24px 24px;
             position: relative;
+            flex: 1;
         }
 
         h2, h3 {
@@ -171,6 +174,104 @@
             display: block;
         }
 
+        /* Общие стили для информационных вкладок */
+        .info-content {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            line-height: 1.6;
+        }
+
+        .info-content h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--secondary-color);
+        }
+
+        .info-content h3 {
+            text-align: left;
+            margin: 25px 0 15px;
+            font-size: 18px;
+            color: var(--secondary-color);
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .info-content h3::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 5px;
+            bottom: 5px;
+            width: 4px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        .info-content ul, .info-content ol {
+            padding-left: 25px;
+            margin-bottom: 20px;
+        }
+
+        .info-content li {
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .info-content p {
+            margin-bottom: 15px;
+        }
+
+        .price-highlight {
+            font-weight: bold;
+            color: var(--success-color);
+        }
+
+        .video-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .video-link:hover {
+            background-color: var(--accent-color);
+        }
+
+        .video-link i {
+            margin-right: 8px;
+        }
+
+        .contact-phone {
+            display: inline-flex;
+            align-items: center;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .contact-phone:hover {
+            background-color: var(--accent-color);
+        }
+
+        .contact-phone i {
+            margin-right: 8px;
+        }
+
+        /* Остальные стили остаются без изменений */
         .form-group {
             margin-bottom: 20px;
             text-align: center;
@@ -466,31 +567,6 @@
             width: 100%;
         }
 
-        .description {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 16px;
-            background-color: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            line-height: 1.6;
-        }
-
-        .description p {
-            margin-bottom: 12px;
-            font-size: 15px;
-        }
-
-        .description ul {
-            padding-left: 20px;
-            margin-bottom: 12px;
-        }
-
-        .description li {
-            margin-bottom: 6px;
-            font-size: 15px;
-        }
-
         .booking-section {
             display: none;
         }
@@ -503,17 +579,6 @@
             color: var(--success-color);
             font-weight: 500;
             margin-top: 8px;
-        }
-
-        .contact-phone {
-            display: inline-block;
-            margin-top: 16px;
-            padding: 8px 16px;
-            background-color: var(--primary-color);
-            color: var(--secondary-color);
-            border-radius: var(--border-radius);
-            font-weight: 500;
-            text-decoration: none;
         }
 
         /* Модальное окно */
@@ -600,6 +665,95 @@
             background-color: #D9D9D9;
         }
 
+        /* Подвал */
+        footer {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 30px 0;
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 200px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .footer-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 8px;
+        }
+
+        .footer-links a {
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+            display: inline-block;
+            padding: 2px 0;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .footer-contact {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer-contact i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            margin-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 14px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 20px;
+            transition: var(--transition);
+        }
+
+        .social-links a:hover {
+            color: var(--primary-color);
+        }
+
         @media (max-width: 768px) {
             .header {
                 padding: 16px 0;
@@ -638,6 +792,10 @@
 
             .modal {
                 padding: 20px;
+            }
+
+            .footer-section {
+                min-width: 100%;
             }
         }
 
@@ -709,6 +867,7 @@
     <div class="tabs">
         <div class="tab active" data-tab="main">Аренда</div>
         <div class="tab" data-tab="info">О чемодане</div>
+        <div class="tab" data-tab="terms">Условия аренды</div>
         <div class="tab" data-tab="status">Проверка статуса</div>
     </div>
 
@@ -767,21 +926,52 @@
 
     <!-- Вкладка с информацией о чемодане -->
     <div id="info" class="tab-content">
-        <div class="description">
-            <h2>🚴 Профессиональный велочемодан для авиаперевозок</h2>
-            <p>Защитите свой велосипед во время перелёта с нашими специальными чемоданами, разработанными для безопасной транспортировки.</p>
-            <p><strong>Почему стоит арендовать наш чемодан:</strong></p>
+        <div class="info-content">
+            <h2>Профессиональный велочемодан для авиаперевозок</h2>
+
+            <h3>Характеристики</h3>
             <ul>
-                <li>Габариты соответствуют требованиям авиакомпаний (до 203 см по сумме сторон)</li>
-                <li>Прочная конструкция защищает от ударов и царапин</li>
+                <li>Габариты: 135×85×35 см (сумма сторон 203 см - соответствует требованиям авиакомпаний)</li>
+                <li>Вес: 12 кг</li>
+                <li>Материал: ударопрочный пластик</li>
                 <li>Вмещает велосипед, колёса, шлем и аксессуары</li>
-                <li>Экономия до 50% по сравнению с покупкой</li>
-                <li>Доставка и помощь с упаковкой</li>
+                <li>Внутренние крепления для фиксации велосипеда</li>
+                <li>Защитные мягкие вставки</li>
             </ul>
-            <p>Идеальное решение для соревнований, велопутешествий и переездов. Ваш велосипед прибудет в целости и сохранности!</p>
-            <p>Телефон для связи: <a href="https://t.me/Dear_V_S" class="contact-phone" target="_blank">
-                <i class="fab fa-telegram"></i> 8 (965) 408-07-54
-            </a></p>
+
+            <h3>Преимущества</h3>
+            <ul>
+                <li>Полная защита вашего велосипеда при перелёте</li>
+                <li>Экономия до 50% по сравнению с покупкой</li>
+                <li>Удобство транспортировки благодаря колесам и выдвижной ручке</li>
+                <li>Возможность доставки по Москве</li>
+            </ul>
+
+            <h3>Как использовать</h3>
+            <ol>
+                <li>Снимите колеса и педали с велосипеда</li>
+                <li>Поверните руль параллельно раме</li>
+                <li>Закрепите велосипед внутри чемодана с помощью внутренних креплений</li>
+                <li>Разместите колеса и аксессуары в специальных отсеках</li>
+                <li>Закройте чемодан и зафиксируйте замки</li>
+            </ol>
+
+            <a href="https://rutube.ru/video/31d4e7845a884c927112ac3d91f89e5f/" class="video-link" target="_blank">
+                <i class="fas fa-play-circle"></i> Упаковка велосипеда в велочемодан
+            </a>
+
+            <h3>Контакты</h3>
+            <p>По всем вопросам обращайтесь:</p>
+            <p>
+                <a href="https://t.me/Dear_V_S" class="contact-phone" target="_blank">
+                    <i class="fab fa-telegram"></i> Telegram: @bikeboxgo
+                </a>
+            </p>
+            <p>
+                <a href="https://wa.me/79654080754" class="contact-phone" target="_blank">
+                    <i class="fab fa-whatsapp"></i> WhatsApp: 8 (965) 408-07-54
+                </a>
+            </p>
         </div>
 
         <div class="carousel">
@@ -815,6 +1005,57 @@
         </div>
     </div>
 
+    <!-- Вкладка с условиями аренды -->
+    <div id="terms" class="tab-content">
+        <div class="info-content">
+            <h2>Условия аренды велочемодана</h2>
+
+            <h3>Стоимость и сроки</h3>
+            <ul>
+                <li>Аренда велочемодана стоит <span class="price-highlight">400 рублей в сутки</span></li>
+                <li>Минимальный срок аренды - <span class="price-highlight">7 суток</span></li>
+                <li>Оплата производится при получении чемодана</li>
+            </ul>
+
+            <h3>Доставка</h3>
+            <p>Мы предлагаем удобную доставку по Москве:</p>
+            <ul>
+                <li>Доставка чемодана к вам - <span class="price-highlight">750 рублей</span></li>
+                <li>Возврат чемодана - <span class="price-highlight">750 рублей</span></li>
+            </ul>
+
+            <h3>Правила использования</h3>
+            <ul>
+                <li>Чемодан должен быть возвращен в чистом и сухом состоянии</li>
+                <li>Запрещается перевозка в чемодане веществ, которые могут оставить пятна или запах</li>
+                <li>Все повреждения должны быть зафиксированы при получении и возврате чемодана</li>
+                <li>При повреждении чемодана взимается стоимость ремонта</li>
+            </ul>
+
+            <h3>Как забронировать</h3>
+            <ol>
+                <li>Выберите даты аренды на нашем сайте</li>
+                <li>Заполните форму бронирования</li>
+                <li>Подтвердите бронь через Telegram или WhatsApp</li>
+                <li>Получите чемодан в согласованном месте</li>
+                <li>После использования верните чемодан в том же состоянии</li>
+            </ol>
+
+            <h3>Контакты</h3>
+            <p>По всем вопросам аренды обращайтесь:</p>
+            <p>
+                <a href="https://t.me/Dear_V_S" class="contact-phone" target="_blank">
+                    <i class="fab fa-telegram"></i> Telegram: @bikeboxgo
+                </a>
+            </p>
+            <p>
+                <a href="https://wa.me/79654080754" class="contact-phone" target="_blank">
+                    <i class="fab fa-whatsapp"></i> WhatsApp: 8 (965) 408-07-54
+                </a>
+            </p>
+        </div>
+    </div>
+
     <!-- Вкладка проверки статуса -->
     <div id="status" class="tab-content">
         <div class="form-group">
@@ -844,6 +1085,51 @@
     </div>
 </div>
 
+<!-- Подвал -->
+<footer>
+    <div class="footer-content">
+        <div class="footer-section">
+            <h3 class="footer-title">BikeBoxGo</h3>
+            <p>Аренда профессиональных велочемоданов для безопасной перевозки велосипедов в самолёте.</p>
+            <div class="social-links">
+                <a href="https://t.me/Dear_V_S" target="_blank"><i class="fab fa-telegram"></i></a>
+                <a href="https://wa.me/79654080754" target="_blank"><i class="fab fa-whatsapp"></i></a>
+            </div>
+        </div>
+
+        <div class="footer-section">
+            <h3 class="footer-title">Контакты</h3>
+            <ul class="footer-links">
+                <li>
+                    <div class="footer-contact">
+                        <i class="fas fa-phone"></i>
+                        <span>8 (965) 408-07-54</span>
+                    </div>
+                </li>
+                <li>
+                    <div class="footer-contact">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Москва, Россия</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="footer-section">
+            <h3 class="footer-title">Информация</h3>
+            <ul class="footer-links">
+                <li><a href="#" data-tab="info" class="footer-tab-link">О чемодане</a></li>
+                <li><a href="#" data-tab="terms" class="footer-tab-link">Условия аренды</a></li>
+                <li><a href="#" data-tab="status" class="footer-tab-link">Проверить бронь</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>&copy; 2025 BikeBoxGo. Все права защищены.</p>
+    </div>
+</footer>
+
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Инициализация вкладок
@@ -862,6 +1148,22 @@
         tabs.forEach(tab => {
             tab.addEventListener('click', function() {
                 switchTab(this);
+            });
+        });
+
+        // Обработчики для ссылок в подвале
+        document.querySelectorAll('.footer-tab-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tabId = this.getAttribute('data-tab');
+                const tabElement = document.querySelector(`.tab[data-tab="${tabId}"]`);
+                if (tabElement) {
+                    switchTab(tabElement);
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }
             });
         });
 
