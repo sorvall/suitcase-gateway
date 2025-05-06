@@ -33,7 +33,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, env, loggers
-  endpoint:
-    health:
-      show-details: always
+        include: health, metrics, prometheus  # открываем нужные эндпоинты
+  metrics:
+    tags:
+      application: suitcase-gateway # (опционально) добавляет теги для метрик
