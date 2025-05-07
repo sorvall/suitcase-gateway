@@ -20,6 +20,11 @@ spring:
           predicates:
             - Path=/availability/**
 
+        - id: suitcase-booking
+          uri: http://103.74.93.74:8081
+          predicates:
+            - Path=/dashboard/**
+
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html

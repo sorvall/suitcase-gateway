@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Диаграмма Ганта - Бронирование чемоданов</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f7fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .chart-container {
+            margin-top: 20px;
+        }
+        .chart {
+            margin-top: 40px;
+        }
+        .bar {
+            fill: #4e79a7;
+            rx: 3;
+            ry: 3;
+            transition: fill 0.2s;
+        }
+        .bar:hover {
+            fill: #f28e2b;
+        }
+        .axis text {
+            font-size: 12px;
+            fill: #555;
+        }
+        .axis line {
+            stroke: #e0e0e0;
+        }
+        .axis path {
+            stroke: #e0e0e0;
+        }
+        .axis-label {
+            font-size: 14px;
+            font-weight: 600;
+            fill: #333;
+        }
+        .grid line {
+            stroke: #e0e0e0;
+            stroke-dasharray: 2,2;
+        }
+        .grid path {
+            stroke-width: 0;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            max-width: 300px;
+        }
+        .tooltip div {
+            margin-bottom: 5px;
+        }
+        .tooltip div:last-child {
+            margin-bottom: 0;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4e79a7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #3a5f8a;
+        }
+        .loading {
+            display: none;
+            margin-top: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>Бронирование чемоданов</h1>
+        <button id="loadDataBtn">Обновить данные</button>
+    </div>
+    <div id="loading" class="loading">Загрузка данных...</div>
+    <div id="chart-container" class="chart-container">
+        <div id="gantt-chart" class="chart"></div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const loadDataBtn = document.getElementById('loadDataBtn');
+        const loadingIndicator = document.getElementById('loading');
+        const chartContainer = document.getElementById('chart-container');
+
+        // Инициализация пустой диаграммы
+        chartContainer.style.display = 'none';
+
+        loadDataBtn.addEventListener('click', function() {
+            loadingIndicator.style.display = 'block';
+            chartContainer.style.display = 'none';
+
+            // Выполняем GET-запрос на /dashboard
+            fetch('/dashboard')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка сети');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingIndicator.style.display = 'none';
+                    chartContainer.style.display = 'block';
+                    renderGanttChart(data);
+                })
+                .catch(error => {
+                    loadingIndicator.style.display = 'none';
+                    console.error('Ошибка при загрузке данных:', error);
+                    alert('Произошла ошибка при загрузке данных');
+                });
+        });
+
+        function renderGanttChart(data) {
+            // Очищаем предыдущую диаграмму
+            d3.select("#gantt-chart").selectAll("*").remove();
+
+            // Преобразуем даты в объекты Date и вычисляем длительность
+            data.forEach(d => {
+                d.startDate = new Date(d.start);
+                d.endDate = new Date(d.end);
+                d.duration = (d.endDate - d.startDate) / (1000 * 60 * 60 * 24) + 1; // Дней между датами (включительно)
+                d.displayName = `${d.name}`; // Только имя без ID
+            });
+
+            // Настройки диаграммы
+            const margin = {top: 40, right: 30, bottom: 70, left: 200};
+            const width = 1000 - margin.left - margin.right;
+            const height = Math.max(400, data.length * 50) - margin.top - margin.bottom;
+
+            // Создаем SVG
+            const svg = d3.select("#gantt-chart")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Шкала X (даты) с шагом 1 день
+            const x = d3.scaleTime()
+                .domain([
+                    d3.min(data, d => d.startDate),
+                    d3.max(data, d => d.endDate)
+                ])
+                .range([0, width]);
+
+            // Шкала Y (используем ID чемоданов для позиционирования, но отображаем только имена)
+            const y = d3.scaleBand()
+                .domain(data.map(d => d.id)) // Используем ID для позиционирования
+                .range([0, height])
+                .padding(0.2);
+
+            // Добавляем сетку с шагом 1 день
+            svg.append("g")
+                .attr("class", "grid")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(d3.timeDay.every(1))
+                    .tickSize(-height)
+                    .tickFormat(""));
+
+            // Ось X с подписями дат
+            svg.append("g")
+                .attr("class", "axis axis--x")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(d3.timeDay.every(1))
+                    .tickFormat(d3.timeFormat("%d %b")));
+
+            // Ось Y с кастомными подписями (только имена)
+            svg.append("g")
+                .attr("class", "axis axis--y")
+                .call(d3.axisLeft(y)
+                    .tickFormat((d) => {
+                        // Находим соответствующую запись в данных
+                        const item = data.find(item => item.id === d);
+                        return item ? item.displayName : "";
+                    }));
+
+            // Подписи осей
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .style("text-anchor", "middle")
+                .text("Дата бронирования");
+
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -margin.left + 20)
+                .attr("x", -height / 2)
+                .style("text-anchor", "middle")
+                .text("Клиент");
+
+            // Tooltip
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+            // Рисуем бары с закругленными углами
+            svg.selectAll(".bar")
+                .data(data)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.startDate))
+                .attr("y", d => y(d.id)) // Позиционируем по ID
+                .attr("width", d => Math.max(1, x(d.endDate) - x(d.startDate))) // Минимальная ширина 1px
+                .attr("height", y.bandwidth())
+                .on("mouseover", (event, d) => {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html(`
+                        <div><strong>${d.name}</strong></div>
+                        <div>Телефон: ${d.phone}</div>
+                        <div>Период: ${d.start} — ${d.end}</div>
+                        <div>Длительность: ${d.duration} дней</div>
+                        <div style="margin-top:5px;color:#ccc">ID чемодана: ${d.id}</div>
+                    `)
+                        .style("left", (event.pageX + 15) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+
+            // Заголовок диаграммы
+            svg.append("text")
+                .attr("x", width / 2)
+                .attr("y", -15)
+                .attr("text-anchor", "middle")
+                .style("font-size", "16px")
+                .style("font-weight", "600")
+                .style("fill", "#2c3e50")
+                .text("График бронирования чемоданов");
+        }
+    });
+</script>
+</body>
+</html>
