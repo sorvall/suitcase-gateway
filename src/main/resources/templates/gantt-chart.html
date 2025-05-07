@@ -3,170 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Диаграмма Ганта - Бронирование чемоданов</title>
+    <title>График бронирования</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
+        :root {
+            --yandex-primary: #FFCC00;
+            --yandex-secondary: #000;
+            --yandex-bg: #fff;
+            --yandex-text: #000;
+            --yandex-gray: #f1f1f1;
+            --yandex-border: #e0e0e0;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 20px;
-            background-color: #f5f7fa;
+            font-family: 'YS Text', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--yandex-bg);
+            color: var(--yandex-text);
         }
+
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            padding: 16px;
+            box-sizing: border-box;
         }
-        .chart-container {
-            margin-top: 20px;
-        }
-        .chart {
-            margin-top: 40px;
-        }
-        .bar {
-            fill: #4e79a7;
-            rx: 3;
-            ry: 3;
-            transition: fill 0.2s;
-        }
-        .bar:hover {
-            fill: #f28e2b;
-        }
-        .axis text {
-            font-size: 12px;
-            fill: #555;
-        }
-        .axis line {
-            stroke: #e0e0e0;
-        }
-        .axis path {
-            stroke: #e0e0e0;
-        }
-        .axis-label {
-            font-size: 14px;
-            font-weight: 600;
-            fill: #333;
-        }
-        .grid line {
-            stroke: #e0e0e0;
-            stroke-dasharray: 2,2;
-        }
-        .grid path {
-            stroke-width: 0;
-        }
-        .tooltip {
-            position: absolute;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            border-radius: 4px;
-            pointer-events: none;
-            font-size: 13px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            max-width: 300px;
-        }
-        .tooltip div {
-            margin-bottom: 5px;
-        }
-        .tooltip div:last-child {
-            margin-bottom: 0;
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-        button {
-            padding: 10px 20px;
-            background-color: #4e79a7;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #3a5f8a;
-        }
-        .loading {
-            display: none;
-            margin-top: 15px;
-            color: #666;
-            font-size: 14px;
-        }
+
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 500;
+            margin: 0;
+            color: var(--yandex-text);
+        }
+
+        .month-navigation {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .month-title {
+            font-size: 16px;
+            font-weight: 500;
+            min-width: 140px;
+            text-align: center;
+        }
+
+        button {
+            background-color: var(--yandex-primary);
+            color: var(--yandex-secondary);
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: #f2c200;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .chart {
+            min-width: 600px;
+        }
+
+        .bar {
+            fill: var(--yandex-primary);
+            rx: 2;
+            ry: 2;
+            transition: opacity 0.2s;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .axis text {
+            font-size: 12px;
+            fill: var(--yandex-text);
+        }
+
+        .axis line {
+            stroke: var(--yandex-border);
+        }
+
+        .axis path {
+            stroke: var(--yandex-border);
+        }
+
+        .grid line {
+            stroke: var(--yandex-gray);
+            stroke-dasharray: 2,2;
+        }
+
+        .grid path {
+            stroke-width: 0;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            max-width: 280px;
+            z-index: 100;
+        }
+
+        .tooltip div {
+            margin-bottom: 4px;
+        }
+
+        .tooltip div:last-child {
+            margin-bottom: 0;
+        }
+
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .month-navigation {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .month-title {
+                flex-grow: 1;
+            }
+
+            button {
+                padding: 8px;
+            }
         }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1>Бронирование чемоданов</h1>
-        <button id="loadDataBtn">Обновить данные</button>
+        <h1>График бронирования чемоданов</h1>
+        <div class="month-navigation">
+            <button id="prevMonthBtn">←</button>
+            <div class="month-title" id="currentMonth">Май 2025</div>
+            <button id="nextMonthBtn">→</button>
+        </div>
     </div>
-    <div id="loading" class="loading">Загрузка данных...</div>
-    <div id="chart-container" class="chart-container">
+
+    <div class="chart-container">
+        <div id="loading" class="loading">Загрузка...</div>
         <div id="gantt-chart" class="chart"></div>
     </div>
 </div>
 
 <script th:inline="javascript">
     document.addEventListener('DOMContentLoaded', function() {
-        const loadDataBtn = document.getElementById('loadDataBtn');
+        // Текущий месяц для отображения
+        let currentDate = new Date(2025, 4, 1); // Май 2025
+        let currentData = [];
+
+        // Элементы управления
+        const prevMonthBtn = document.getElementById('prevMonthBtn');
+        const nextMonthBtn = document.getElementById('nextMonthBtn');
+        const currentMonthEl = document.getElementById('currentMonth');
         const loadingIndicator = document.getElementById('loading');
-        const chartContainer = document.getElementById('chart-container');
+        const chartContainer = document.getElementById('gantt-chart');
 
-        // Инициализация пустой диаграммы
-        chartContainer.style.display = 'none';
+        // Обновляем отображение текущего месяца
+        function updateMonthDisplay() {
+            currentMonthEl.textContent = currentDate.toLocaleDateString('ru-RU', {
+                month: 'long',
+                year: 'numeric'
+            });
+        }
 
-        loadDataBtn.addEventListener('click', function() {
+        // Загрузка данных
+        function loadData() {
             loadingIndicator.style.display = 'block';
-            chartContainer.style.display = 'none';
+            chartContainer.innerHTML = '';
 
-            // Выполняем GET-запрос на /dashboard
-            fetch('/dashboard')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Ошибка сети');
-                    }
-                    return response.json();
-                })
+            // В реальном приложении здесь будет fetch с параметрами месяца
+            fetch('/dashboard?month=' + currentDate.getMonth() + '&year=' + currentDate.getFullYear())
+                .then(response => response.json())
                 .then(data => {
+                    currentData = data;
+                    renderGanttChart();
                     loadingIndicator.style.display = 'none';
-                    chartContainer.style.display = 'block';
-                    renderGanttChart(data);
                 })
                 .catch(error => {
+                    console.error('Ошибка:', error);
                     loadingIndicator.style.display = 'none';
-                    console.error('Ошибка при загрузке данных:', error);
-                    alert('Произошла ошибка при загрузке данных');
                 });
-        });
+        }
 
-        function renderGanttChart(data) {
+        // Отрисовка диаграммы
+        function renderGanttChart() {
             // Очищаем предыдущую диаграмму
             d3.select("#gantt-chart").selectAll("*").remove();
 
-            // Преобразуем даты в объекты Date и вычисляем длительность
-            data.forEach(d => {
+            if (currentData.length === 0) {
+                chartContainer.innerHTML = '<div style="text-align:center;padding:40px;">Нет данных за выбранный период</div>';
+                return;
+            }
+
+            // Преобразуем даты
+            currentData.forEach(d => {
                 d.startDate = new Date(d.start);
                 d.endDate = new Date(d.end);
-                d.duration = (d.endDate - d.startDate) / (1000 * 60 * 60 * 24) + 1; // Дней между датами (включительно)
-                d.displayName = `${d.name}`; // Только имя без ID
+                d.duration = (d.endDate - d.startDate) / (1000 * 60 * 60 * 24) + 1;
             });
 
             // Настройки диаграммы
-            const margin = {top: 40, right: 30, bottom: 70, left: 200};
-            const width = 1000 - margin.left - margin.right;
-            const height = Math.max(400, data.length * 50) - margin.top - margin.bottom;
+            const margin = {top: 20, right: 20, bottom: 50, left: 60};
+            const width = Math.max(600, chartContainer.clientWidth) - margin.left - margin.right;
+            const height = Math.max(300, currentData.length * 30) - margin.top - margin.bottom;
 
             // Создаем SVG
             const svg = d3.select("#gantt-chart")
@@ -176,21 +264,22 @@
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Шкала X (даты) с шагом 1 день
+            // Определяем границы месяца
+            const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+            // Шкала X (только текущий месяц)
             const x = d3.scaleTime()
-                .domain([
-                    d3.min(data, d => d.startDate),
-                    d3.max(data, d => d.endDate)
-                ])
+                .domain([monthStart, monthEnd])
                 .range([0, width]);
 
-            // Шкала Y (используем ID чемоданов для позиционирования, но отображаем только имена)
+            // Шкала Y (по ID чемоданов)
             const y = d3.scaleBand()
-                .domain(data.map(d => d.id)) // Используем ID для позиционирования
+                .domain(currentData.map(d => d.id))
                 .range([0, height])
-                .padding(0.2);
+                .padding(0.1);
 
-            // Добавляем сетку с шагом 1 день
+            // Сетка по дням
             svg.append("g")
                 .attr("class", "grid")
                 .attr("transform", `translate(0,${height})`)
@@ -199,85 +288,95 @@
                     .tickSize(-height)
                     .tickFormat(""));
 
-            // Ось X с подписями дат
+            // Ось X с датами
             svg.append("g")
                 .attr("class", "axis axis--x")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(x)
                     .ticks(d3.timeDay.every(1))
-                    .tickFormat(d3.timeFormat("%d %b")));
+                    .tickFormat(d3.timeFormat("%d")));
 
-            // Ось Y с кастомными подписями (только имена)
+            // Ось Y без подписей
             svg.append("g")
                 .attr("class", "axis axis--y")
-                .call(d3.axisLeft(y)
-                    .tickFormat((d) => {
-                        // Находим соответствующую запись в данных
-                        const item = data.find(item => item.id === d);
-                        return item ? item.displayName : "";
-                    }));
+                .call(d3.axisLeft(y).tickFormat(""));
 
-            // Подписи осей
+            // Бары диаграммы
+            svg.selectAll(".bar")
+                .data(currentData)
+                .enter()
+                .append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.startDate > monthStart ? d.startDate : monthStart))
+                .attr("y", d => y(d.id))
+                .attr("width", d => {
+                    const start = d.startDate > monthStart ? d.startDate : monthStart;
+                    const end = d.endDate < monthEnd ? d.endDate : monthEnd;
+                    return Math.max(1, x(end) - x(start));
+                })
+                .attr("height", y.bandwidth())
+                .on("mouseover", showTooltip)
+                .on("mouseout", hideTooltip);
+
+            // Подпись оси X
             svg.append("text")
                 .attr("class", "axis-label")
                 .attr("x", width / 2)
                 .attr("y", height + margin.bottom - 10)
                 .style("text-anchor", "middle")
-                .text("Дата бронирования");
-
-            svg.append("text")
-                .attr("class", "axis-label")
-                .attr("transform", "rotate(-90)")
-                .attr("y", -margin.left + 20)
-                .attr("x", -height / 2)
-                .style("text-anchor", "middle")
-                .text("Клиент");
+                .text("Дни месяца");
 
             // Tooltip
             const tooltip = d3.select("body").append("div")
                 .attr("class", "tooltip")
                 .style("opacity", 0);
 
-            // Рисуем бары с закругленными углами
-            svg.selectAll(".bar")
-                .data(data)
-                .enter()
-                .append("rect")
-                .attr("class", "bar")
-                .attr("x", d => x(d.startDate))
-                .attr("y", d => y(d.id)) // Позиционируем по ID
-                .attr("width", d => Math.max(1, x(d.endDate) - x(d.startDate))) // Минимальная ширина 1px
-                .attr("height", y.bandwidth())
-                .on("mouseover", (event, d) => {
-                    tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    tooltip.html(`
-                        <div><strong>${d.name}</strong></div>
-                        <div>Телефон: ${d.phone}</div>
-                        <div>Период: ${d.start} — ${d.end}</div>
-                        <div>Длительность: ${d.duration} дней</div>
-                        <div style="margin-top:5px;color:#ccc">ID чемодана: ${d.id}</div>
-                    `)
-                        .style("left", (event.pageX + 15) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", () => {
-                    tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
+            function showTooltip(event, d) {
+                tooltip.transition()
+                    .duration(200)
+                    .style("opacity", .9);
 
-            // Заголовок диаграммы
-            svg.append("text")
-                .attr("x", width / 2)
-                .attr("y", -15)
-                .attr("text-anchor", "middle")
-                .style("font-size", "16px")
-                .style("font-weight", "600")
-                .style("fill", "#2c3e50")
-                .text("График бронирования чемоданов");
+                tooltip.html(`
+                    <div><strong>Чемодан #${d.id.substr(0, 8)}</strong></div>
+                    <div>Период: ${d.start} — ${d.end}</div>
+                    <div>Клиент: ${d.name}</div>
+                    <div>Телефон: ${d.phone}</div>
+                    <div>Длительность: ${d.duration} дней</div>
+                `)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            }
+
+            function hideTooltip() {
+                tooltip.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            }
         }
+
+        // Навигация по месяцам
+        prevMonthBtn.addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            updateMonthDisplay();
+            loadData();
+        });
+
+        nextMonthBtn.addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            updateMonthDisplay();
+            loadData();
+        });
+
+        // Инициализация
+        updateMonthDisplay();
+        loadData();
+
+        // Адаптация к изменению размера окна
+        window.addEventListener('resize', function() {
+            if (currentData.length > 0) {
+                renderGanttChart();
+            }
+        });
     });
 </script>
 </body>
