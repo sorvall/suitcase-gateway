@@ -9,13 +9,13 @@
     <style>
         :root {
             --yandex-yellow: #FFDB4D;
-            --yandex-black: #000;
+            --yandex-yellow-dark: #FCC521;
+            --yandex-black: #000000;
             --yandex-gray: #F2F2F2;
             --yandex-light-gray: #FAFAFA;
             --yandex-dark-gray: #7F8285;
             --yandex-red: #FF3333;
-            --yandex-blue: #0066FF;
-            --yandex-green: #00B341;
+            --yandex-white: #FFFFFF;
         }
 
         * {
@@ -35,7 +35,7 @@
         .yandex-dashboard {
             max-width: 1200px;
             margin: 0 auto;
-            background-color: white;
+            background-color: var(--yandex-white);
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             overflow: hidden;
@@ -69,7 +69,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background-color: white;
+            background-color: var(--yandex-white);
             border-radius: 8px;
             padding: 4px;
             border: 1px solid var(--yandex-gray);
@@ -99,7 +99,7 @@
         }
 
         .yandex-button.secondary {
-            background-color: white;
+            background-color: var(--yandex-white);
             color: var(--yandex-black);
             border: 1px solid var(--yandex-gray);
         }
@@ -143,7 +143,7 @@
         }
 
         .yandex-bar {
-            fill: var(--yandex-blue);
+            fill: var(--yandex-yellow-dark);
             rx: 4;
             ry: 4;
             transition: all 0.2s;
@@ -479,7 +479,7 @@
                     .text("Сегодня");
             }
 
-            // Бары диаграммы
+            // Бары диаграммы (теперь желтые)
             svg.selectAll(".yandex-bar")
                 .data(currentData)
                 .enter()
