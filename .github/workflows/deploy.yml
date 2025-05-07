@@ -59,4 +59,4 @@ jobs:
             docker build -t suitcase-gateway .
 
             # Запустить новый контейнер
-            docker run -d -p 80:80 --name suitcase-gateway-container suitcase-gateway
+            docker run -d -p 80:80 --name suitcase-gateway-container -e DASHBOARD_USER=${{ secrets.DASHBOARD_USER }} -e DASHBOARD_PASS=${{ secrets.DASHBOARD_PASS }} suitcase-gateway
