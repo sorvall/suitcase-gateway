@@ -370,28 +370,28 @@
             loadingIndicator.style.display = 'flex';
             chartContainer.innerHTML = '';
 
-            // Симуляция загрузки данных (в реальном приложении будет fetch)
-            setTimeout(() => {
-                // Пример данных (в реальном приложении будет ответ от сервера)
-                const mockData = [
-                    {serial: "CH-0001", name: "Иванов Иван", phone: "+7 900 123-45-67", start: "2025-05-08", end: "2025-05-18"},
-                    {serial: "CH-0002", name: "Петрова Анна", phone: "+7 901 234-56-78", start: "2025-05-10", end: "2025-05-15"},
-                    {serial: "CH-0003", name: "Сидоров Алексей", phone: "+7 902 345-67-89", start: "2025-05-12", end: "2025-05-20"},
-                    {serial: "CH-0004", name: "Кузнецова Ольга", phone: "+7 903 456-78-90", start: "2025-05-05", end: "2025-05-25"},
-                    {serial: "CH-0005", name: "Васильев Дмитрий", phone: "+7 904 567-89-01", start: "2025-05-15", end: "2025-05-22"}
-                ];
+            // Формируем параметры запроса
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1; // месяцы в JS 0-11
 
-                currentData = mockData.filter(item => {
-                    const startDate = new Date(item.start);
-                    const endDate = new Date(item.end);
-                    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-                    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-                    return (startDate <= monthEnd && endDate >= monthStart);
+            fetch(`/dashboard?year=${year}&month=${month}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Ошибка загрузки данных');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    currentData = data;
+                    renderGanttChart();
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    chartContainer.innerHTML = '<div class="no-data">Ошибка загрузки данных</div>';
+                })
+                .finally(() => {
+                    loadingIndicator.style.display = 'none';
                 });
-
-                renderGanttChart();
-                loadingIndicator.style.display = 'none';
-            }, 800);
         }
 
         // Отрисовка диаграммы
@@ -399,7 +399,7 @@
             // Очищаем предыдущую диаграмму
             d3.select("#gantt-chart").selectAll("*").remove();
 
-            if (currentData.length === 0) {
+            if (!currentData || currentData.length === 0) {
                 chartContainer.innerHTML = '<div class="no-data">Нет данных за выбранный период</div>';
                 return;
             }
@@ -586,7 +586,7 @@
 
         // Адаптация к изменению размера окна
         window.addEventListener('resize', function() {
-            if (currentData.length > 0) {
+            if (currentData && currentData.length > 0) {
                 renderGanttChart();
             }
         });
