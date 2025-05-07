@@ -1,3 +1,4 @@
+/*
 
 package ru.sorokin.gateway.configuration;
 
@@ -44,4 +45,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance(); // простой вариант без шифрования
     }
-}
+}*/

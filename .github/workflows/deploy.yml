@@ -22,7 +22,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build -x test
+        run: ./gradlew build
 
       - name: Copy JAR to remote server
         uses: appleboy/scp-action@v0.1.4
@@ -59,4 +59,4 @@ jobs:
             docker build -t suitcase-gateway .
 
             # Запустить новый контейнер
-            docker run -d -p 80:80 --name suitcase-gateway-container -e DASHBOARD_USER=${{ secrets.DASHBOARD_USER }} -e DASHBOARD_PASS=${{ secrets.DASHBOARD_PASS }} suitcase-gateway
+            docker run -d -p 80:80 --name suitcase-gateway-container suitcase-gateway
