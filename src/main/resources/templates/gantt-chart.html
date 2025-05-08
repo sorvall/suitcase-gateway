@@ -145,13 +145,20 @@
             transition: all 0.2s;
         }
 
-        .bar:hover {
-            fill: var(--yandex-yellow);
-            filter: brightness(1.1);
+        .bar.active {
+            fill: var(--yandex-yellow-dark);
+        }
+
+        .bar.future {
+            fill: var(--yandex-gray);
         }
 
         .bar.past {
             fill: var(--yandex-dark-gray);
+        }
+
+        .bar:hover {
+            filter: brightness(1.1);
         }
 
         .current-day-line {
@@ -421,7 +428,15 @@
                 d.startDate = new Date(d.start);
                 d.endDate = new Date(d.end);
                 d.duration = (d.endDate - d.startDate) / (1000 * 60 * 60 * 24) + 1;
-                d.isPast = d.endDate < today;
+
+                // Определяем статус бронирования
+                if (d.endDate < today) {
+                    d.status = 'past'; // Завершенные
+                } else if (d.startDate <= today) {
+                    d.status = 'active'; // Активные
+                } else {
+                    d.status = 'future'; // Будущие
+                }
             });
 
             // Настройки диаграммы
@@ -503,7 +518,7 @@
                 .data(currentData)
                 .enter()
                 .append("rect")
-                .attr("class", d => `bar ${d.isPast ? 'past' : ''}`)
+                .attr("class", d => `bar ${d.status}`)
                 .attr("x", d => x(d.startDate > monthStart ? d.startDate : monthStart))
                 .attr("y", d => y(d.serial))
                 .attr("width", d => {
@@ -539,15 +554,21 @@
                             </div>
                             <div class="tooltip-row">
                                 <span class="tooltip-label">Статус:</span>
-                                <span class="tooltip-value">${d.isPast ? 'Завершено' : 'Активно'}</span>
+                                <span class="tooltip-value">${
+                        d.status === 'past' ? 'Завершено' :
+                            d.status === 'active' ? 'Активно' : 'Запланировано'
+                    }</span>
                             </div>
                         `)
                         .style("left", (event.pageX + 15) + "px")
                         .style("top", (event.pageY - 30) + "px")
                         .classed("show", true);
                 })
-                .on("mouseout", function(d) {
-                    d3.select(this).attr("fill", d => d.isPast ? "var(--yandex-dark-gray)" : "var(--yandex-yellow-dark)");
+                .on("mouseout", function(event, d) {
+                    // Возвращаем соответствующий цвет в зависимости от статуса
+                    const color = d.status === 'past' ? "var(--yandex-dark-gray)" :
+                        d.status === 'active' ? "var(--yandex-yellow-dark)" : "var(--yandex-gray)";
+                    d3.select(this).attr("fill", color);
                     tooltip.classed("show", false);
                 });
 
