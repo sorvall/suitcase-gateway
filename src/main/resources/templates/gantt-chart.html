@@ -30,7 +30,6 @@
             color: var(--yandex-black);
             line-height: 1.5;
             padding: 16px;
-            overflow-x: hidden;
         }
 
         .dashboard {
@@ -39,7 +38,6 @@
             background-color: var(--yandex-white);
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
         }
 
         .dashboard-header {
@@ -56,7 +54,6 @@
         .dashboard-title {
             font-size: 20px;
             font-weight: 700;
-            color: var(--yandex-black);
         }
 
         .controls {
@@ -81,7 +78,6 @@
             font-weight: 500;
             min-width: 140px;
             text-align: center;
-            color: var(--yandex-black);
         }
 
         .btn {
@@ -93,7 +89,6 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -105,23 +100,6 @@
             border: 1px solid var(--yandex-gray);
         }
 
-        .btn.secondary:hover {
-            background-color: var(--yandex-gray);
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-        }
-
-        .btn svg {
-            width: 16px;
-            height: 16px;
-        }
-
         .dashboard-content {
             padding: 20px;
             position: relative;
@@ -129,19 +107,17 @@
 
         .chart-container {
             width: 100%;
-            overflow: hidden;
+            overflow-x: auto;
             margin-top: 16px;
         }
 
         .chart {
-            width: 100%;
-            min-width: 100%;
+            min-width: 800px;
         }
 
         .bar {
             rx: 4;
             ry: 4;
-            transition: all 0.2s;
         }
 
         .bar.active {
@@ -156,33 +132,10 @@
             fill: var(--yandex-dark-gray);
         }
 
-        .bar:hover {
-            filter: brightness(1.1);
-        }
-
         .current-day-line {
             stroke: var(--yandex-red);
             stroke-width: 2;
             stroke-dasharray: 4, 4;
-        }
-
-        .axis text {
-            font-size: 12px;
-            fill: var(--yandex-dark-gray);
-            font-family: 'YSText', sans-serif;
-        }
-
-        .axis line {
-            stroke: var(--yandex-gray);
-        }
-
-        .axis path {
-            stroke: var(--yandex-gray);
-        }
-
-        .grid line {
-            stroke: var(--yandex-gray);
-            stroke-dasharray: 2, 2;
         }
 
         .tooltip {
@@ -193,10 +146,8 @@
             border-radius: 8px;
             pointer-events: none;
             font-size: 13px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             max-width: 280px;
             z-index: 100;
-            font-family: 'YSText', sans-serif;
             opacity: 0;
             transition: opacity 0.2s;
         }
@@ -217,15 +168,6 @@
             margin-bottom: 4px;
         }
 
-        .tooltip-label {
-            color: var(--yandex-gray);
-            margin-right: 12px;
-        }
-
-        .tooltip-value {
-            font-weight: 500;
-        }
-
         .loading {
             position: absolute;
             top: 0;
@@ -239,77 +181,12 @@
             flex-direction: column;
             gap: 12px;
             z-index: 50;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-        }
-
-        .loading.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255, 219, 77, 0.2);
-            border-radius: 50%;
-            border-top-color: var(--yandex-yellow);
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            font-size: 14px;
-            color: var(--yandex-dark-gray);
         }
 
         .no-data {
             text-align: center;
             padding: 40px;
             color: var(--yandex-dark-gray);
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .controls {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .month-navigation {
-                width: 100%;
-            }
-
-            .month-title {
-                flex-grow: 1;
-            }
-        }
-
-        @media (max-width: 480px) {
-            body {
-                padding: 12px;
-            }
-
-            .dashboard-header {
-                padding: 16px;
-            }
-
-            .dashboard-title {
-                font-size: 18px;
-            }
-
-            .btn {
-                padding: 8px 12px;
-                font-size: 13px;
-            }
         }
     </style>
 </head>
@@ -320,19 +197,19 @@
         <div class="controls">
             <div class="month-navigation">
                 <button id="prevMonthBtn" class="btn secondary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M15 18l-6-6 6-6"/>
                     </svg>
                 </button>
-                <div class="month-title" id="currentMonth">Май 2025</div>
+                <div class="month-title" id="currentMonth"></div>
                 <button id="nextMonthBtn" class="btn secondary">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 18l6-6-6-6"/>
                     </svg>
                 </button>
             </div>
             <button id="refreshBtn" class="btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                 </svg>
                 Обновить
@@ -341,7 +218,7 @@
     </div>
 
     <div class="dashboard-content">
-        <div id="loading" class="loading">
+        <div id="loading" class="loading" style="display: none;">
             <div class="spinner"></div>
             <div class="loading-text">Загрузка данных...</div>
         </div>
@@ -352,19 +229,11 @@
     </div>
 </div>
 
-<script th:inline="javascript">
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         // Текущая дата и данные
         let currentDate = new Date();
         let currentData = [];
-
-        // Элементы управления
-        const prevMonthBtn = document.getElementById('prevMonthBtn');
-        const nextMonthBtn = document.getElementById('nextMonthBtn');
-        const refreshBtn = document.getElementById('refreshBtn');
-        const currentMonthEl = document.getElementById('currentMonth');
-        const loadingIndicator = document.getElementById('loading');
-        const chartContainer = document.getElementById('gantt-chart');
         const tooltip = d3.select("body").append("div").attr("class", "tooltip");
 
         // Функция для получения текущей даты без времени
@@ -376,149 +245,112 @@
 
         // Обновляем отображение текущего месяца
         function updateMonthDisplay() {
-            currentMonthEl.textContent = currentDate.toLocaleDateString('ru-RU', {
-                month: 'long',
-                year: 'numeric'
-            }).replace(/^./, l => l.toUpperCase());
-        }
-
-        // Показать/скрыть загрузку
-        function setLoading(show) {
-            loadingIndicator.classList.toggle('active', show);
+            document.getElementById('currentMonth').textContent =
+                currentDate.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })
+                    .replace(/^./, l => l.toUpperCase());
         }
 
         // Загрузка данных
         function loadData() {
-            setLoading(true);
-            chartContainer.innerHTML = '';
+            const loading = document.getElementById('loading');
+            loading.style.display = 'flex';
 
-            // Формируем параметры запроса
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth() + 1;
 
             fetch(`/dashboard?year=${year}&month=${month}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Ошибка загрузки данных');
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     currentData = data;
                     renderGanttChart();
                 })
                 .catch(error => {
                     console.error('Ошибка:', error);
-                    chartContainer.innerHTML = '<div class="no-data">Ошибка загрузки данных</div>';
+                    document.getElementById('gantt-chart').innerHTML =
+                        '<div class="no-data">Ошибка загрузки данных</div>';
                 })
                 .finally(() => {
-                    setLoading(false);
+                    loading.style.display = 'none';
                 });
         }
 
         // Отрисовка диаграммы
         function renderGanttChart() {
-            // Очищаем предыдущую диаграмму
-            d3.select("#gantt-chart").selectAll("*").remove();
+            const chart = d3.select("#gantt-chart");
+            chart.selectAll("*").remove();
 
             if (!currentData || currentData.length === 0) {
-                chartContainer.innerHTML = '<div class="no-data">Нет данных за выбранный период</div>';
+                chart.html('<div class="no-data">Нет данных за выбранный период</div>');
                 return;
             }
 
-            // Преобразуем даты
             const today = getToday();
+            const margin = { top: 30, right: 30, bottom: 50, left: 120 };
+            const width = chart.node().clientWidth - margin.left - margin.right;
+            const height = Math.max(400, currentData.length * 40);
 
+            // Подготовка данных
             currentData.forEach(d => {
                 d.startDate = new Date(d.start);
                 d.startDate.setHours(0, 0, 0, 0);
                 d.endDate = new Date(d.end);
-                d.endDate.setHours(23, 59, 59, 999); // Устанавливаем конец дня
+                d.endDate.setHours(0, 0, 0, 0);
 
-                d.duration = (d.endDate - d.startDate) / (1000 * 60 * 60 * 24) + 1;
+                // Корректный расчет длительности
+                d.duration = Math.round((d.endDate - d.startDate) / (86400000)) + 1;
 
-                // Определяем статус бронирования
+                // Определение статуса
                 if (d.endDate < today) {
-                    d.status = 'past'; // Завершенные
+                    d.status = 'past';
                 } else if (d.startDate <= today) {
-                    d.status = 'active'; // Активные
+                    d.status = 'active';
                 } else {
-                    d.status = 'future'; // Будущие
+                    d.status = 'future';
                 }
             });
 
-            // Настройки диаграммы
-            const margin = {top: 30, right: 30, bottom: 50, left: 120};
-            const containerWidth = chartContainer.clientWidth;
-            const width = containerWidth - margin.left - margin.right;
-            const height = Math.max(400, currentData.length * 40) - margin.top - margin.bottom;
-
-            // Создаем SVG
-            const svg = d3.select("#gantt-chart")
-                .append("svg")
+            // Создание SVG
+            const svg = chart.append("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Определяем границы месяца (31 день)
+            // Настройка шкал
             const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
             const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-            // Убедимся, что отображаем 31 день
-            const daysInMonth = (monthEnd - monthStart) / (1000 * 60 * 60 * 24) + 1;
-            const displayEnd = daysInMonth < 31 ?
-                new Date(currentDate.getFullYear(), currentDate.getMonth(), 31) :
-                monthEnd;
-
-            // Шкала X (31 день)
             const x = d3.scaleTime()
-                .domain([monthStart, displayEnd])
+                .domain([monthStart, monthEnd])
                 .range([0, width]);
 
-            // Шкала Y (по серийным номерам)
             const y = d3.scaleBand()
                 .domain(currentData.map(d => d.serial))
                 .range([0, height])
                 .padding(0.2);
 
-            // Сетка по дням
+            // Оси и сетка
             svg.append("g")
                 .attr("class", "grid")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x)
-                    .ticks(d3.timeDay.every(1))
-                    .tickSize(-height)
-                    .tickFormat(""));
+                .call(d3.axisBottom(x).ticks(d3.timeDay.every(1)).tickSize(-height).tickFormat(""));
 
-            // Ось X с датами
             svg.append("g")
                 .attr("class", "axis axis--x")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x)
-                    .ticks(d3.timeDay.every(1))
-                    .tickFormat(d3.timeFormat("%d")));
+                .call(d3.axisBottom(x).ticks(d3.timeDay.every(1)).tickFormat(d3.timeFormat("%d")));
 
-            // Ось Y с серийными номерами
             svg.append("g")
                 .attr("class", "axis axis--y")
                 .call(d3.axisLeft(y));
 
             // Линия текущего дня
-            if (today >= monthStart && today <= displayEnd) {
+            if (today >= monthStart && today <= monthEnd) {
                 svg.append("line")
                     .attr("class", "current-day-line")
                     .attr("x1", x(today))
                     .attr("x2", x(today))
                     .attr("y1", 0)
                     .attr("y2", height);
-
-                svg.append("text")
-                    .attr("x", x(today) + 4)
-                    .attr("y", -8)
-                    .attr("fill", "var(--yandex-red)")
-                    .style("font-size", "11px")
-                    .style("font-weight", "500")
-                    .text("Сегодня");
             }
 
             // Бары диаграммы
@@ -531,7 +363,7 @@
                 .attr("y", d => y(d.serial))
                 .attr("width", d => {
                     const start = d.startDate > monthStart ? d.startDate : monthStart;
-                    const end = d.endDate < displayEnd ? d.endDate : displayEnd;
+                    const end = d.endDate < monthEnd ? d.endDate : monthEnd;
                     return Math.max(1, x(end) - x(start));
                 })
                 .attr("height", y.bandwidth())
@@ -539,41 +371,40 @@
                     d3.select(this).attr("fill", "var(--yandex-yellow)");
 
                     tooltip.html(`
-                            <div class="tooltip-title">Бронирование чемодана</div>
-                            <div class="tooltip-row">
-                                <span class="tooltip-label">Номер:</span>
-                                <span class="tooltip-value">${d.serial}</span>
-                            </div>
-                            <div class="tooltip-row">
-                                <span class="tooltip-label">Клиент:</span>
-                                <span class="tooltip-value">${d.name}</span>
-                            </div>
-                            <div class="tooltip-row">
-                                <span class="tooltip-label">Телефон:</span>
-                                <span class="tooltip-value">${d.phone}</span>
-                            </div>
-                            <div class="tooltip-row">
-                                <span class="tooltip-label">Период:</span>
-                                <span class="tooltip-value">${d.start} — ${d.end}</span>
-                            </div>
-                            <div class="tooltip-row">
-                                <span class="tooltip-label">Длительность:</span>
-                                <span class="tooltip-value">${d.duration} дней</span>
-                            </div>
-                            <div class="tooltip-row">
-                                <span class="tooltip-label">Статус:</span>
-                                <span class="tooltip-value">${
+                    <div class="tooltip-title">Бронирование чемодана</div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Номер:</span>
+                        <span class="tooltip-value">${d.serial}</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Клиент:</span>
+                        <span class="tooltip-value">${d.name}</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Телефон:</span>
+                        <span class="tooltip-value">${d.phone}</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Период:</span>
+                        <span class="tooltip-value">${d.start} — ${d.end}</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Длительность:</span>
+                        <span class="tooltip-value">${d.duration} дней</span>
+                    </div>
+                    <div class="tooltip-row">
+                        <span class="tooltip-label">Статус:</span>
+                        <span class="tooltip-value">${
                         d.status === 'past' ? 'Завершено' :
                             d.status === 'active' ? 'Активно' : 'Запланировано'
                     }</span>
-                            </div>
-                        `)
+                    </div>
+                `)
                         .style("left", (event.pageX + 15) + "px")
                         .style("top", (event.pageY - 30) + "px")
                         .classed("show", true);
                 })
                 .on("mouseout", function(event, d) {
-                    // Возвращаем соответствующий цвет в зависимости от статуса
                     const color = d.status === 'past' ? "var(--yandex-dark-gray)" :
                         d.status === 'active' ? "var(--yandex-yellow-dark)" : "var(--yandex-gray)";
                     d3.select(this).attr("fill", color);
@@ -585,7 +416,6 @@
                 .attr("class", "axis-label")
                 .attr("x", width / 2)
                 .attr("y", height + margin.bottom - 10)
-                .style("text-anchor", "middle")
                 .text("Дни месяца");
 
             svg.append("text")
@@ -593,32 +423,29 @@
                 .attr("transform", "rotate(-90)")
                 .attr("y", -margin.left + 20)
                 .attr("x", -height / 2)
-                .style("text-anchor", "middle")
                 .text("Серийный номер");
         }
 
-        // Навигация по месяцам
-        prevMonthBtn.addEventListener('click', function() {
+        // Инициализация
+        document.getElementById('prevMonthBtn').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() - 1);
             updateMonthDisplay();
             loadData();
         });
 
-        nextMonthBtn.addEventListener('click', function() {
+        document.getElementById('nextMonthBtn').addEventListener('click', () => {
             currentDate.setMonth(currentDate.getMonth() + 1);
             updateMonthDisplay();
             loadData();
         });
 
-        // Кнопка обновления
-        refreshBtn.addEventListener('click', loadData);
+        document.getElementById('refreshBtn').addEventListener('click', loadData);
 
-        // Инициализация
         updateMonthDisplay();
         loadData();
 
         // Адаптация к изменению размера окна
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', () => {
             if (currentData && currentData.length > 0) {
                 renderGanttChart();
             }
