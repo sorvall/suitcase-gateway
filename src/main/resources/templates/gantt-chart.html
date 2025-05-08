@@ -139,7 +139,6 @@
         }
 
         .bar {
-            fill: var(--yandex-yellow-dark);
             rx: 4;
             ry: 4;
             transition: all 0.2s;
@@ -368,6 +367,13 @@
         const chartContainer = document.getElementById('gantt-chart');
         const tooltip = d3.select("body").append("div").attr("class", "tooltip");
 
+        // Функция для получения текущей даты без времени
+        function getToday() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return today;
+        }
+
         // Обновляем отображение текущего месяца
         function updateMonthDisplay() {
             currentMonthEl.textContent = currentDate.toLocaleDateString('ru-RU', {
@@ -421,12 +427,14 @@
             }
 
             // Преобразуем даты
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            const today = getToday();
 
             currentData.forEach(d => {
                 d.startDate = new Date(d.start);
+                d.startDate.setHours(0, 0, 0, 0);
                 d.endDate = new Date(d.end);
+                d.endDate.setHours(23, 59, 59, 999); // Устанавливаем конец дня
+
                 d.duration = (d.endDate - d.startDate) / (1000 * 60 * 60 * 24) + 1;
 
                 // Определяем статус бронирования
