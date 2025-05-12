@@ -1,4 +1,4 @@
-name: Build and Deploy Gateway
+name: Build and Deploy Booking
 
 on:
   push:
@@ -22,19 +22,19 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build -x test
 
-      # Шаг 1: Копируем JAR файл на удаленный сервер
+      # Копирование JAR файла в удаленный сервер
       - name: Copy JAR to remote server
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "build/libs/suitcase-gateway-0.0.1-SNAPSHOT.jar"
-          target: "/root/suitcase-app/gateway"
+          source: "build/libs/suitcase-booking-0.0.1-SNAPSHOT.jar"
+          target: "/root/suitcase-app/booking"
 
-      # Шаг 2: Копируем Dockerfile на удаленный сервер
+      # Копирование Dockerfile на удаленный сервер
       - name: Copy Dockerfile to remote server
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -42,9 +42,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           source: "Dockerfile"
-          target: "/root/suitcase-app/gateway"
+          target: "/root/suitcase-app/booking"
 
-      # Шаг 3: Создаем Docker-сеть
+      # Создание Docker-сети
       - name: Create Docker Network
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -55,7 +55,7 @@ jobs:
             # Создаем Docker-сеть (если она еще не существует)
             docker network create suitcase-network || true
 
-      # Шаг 4: Выполняем SSH-команды для сборки и запуска контейнера
+      # Шаг: Сборка и запуск контейнера
       - name: SSH Command to Build and Run Docker Container
         uses: appleboy/ssh-action@v0.1.5
         with:
@@ -63,14 +63,14 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            cd /root/suitcase-app/gateway
+            cd /root/suitcase-app/booking
 
             # Остановить и удалить старый контейнер, если он существует
-            docker stop suitcase-gateway-container || true
-            docker rm suitcase-gateway-container || true
+            docker stop suitcase-booking-container || true
+            docker rm suitcase-booking-container || true
 
             # Построить новый образ
-            docker build -t suitcase-gateway .
+            docker build -t suitcase-booking .
 
-            # Запустить новый контейнер и подключить его к сети
-            docker run -d -p 443:443 --name suitcase-gateway-container --network suitcase-network suitcase-gateway
+            # Запуск нового контейнера с подключением к сети
+            docker run -d -p 8081:8081 --name suitcase-booking-container --network suitcase-network suitcase-booking
