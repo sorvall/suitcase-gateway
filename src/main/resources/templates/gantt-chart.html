@@ -43,13 +43,6 @@
             border-radius: 16px;
             box-shadow: var(--shadow-md);
             overflow: hidden;
-            transform: translateY(0);
-            transition: var(--transition);
-        }
-
-        .dashboard:hover {
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            transform: translateY(-2px);
         }
 
         .dashboard-header {
@@ -100,11 +93,6 @@
             padding: 6px;
             border: 1px solid var(--yandex-gray);
             box-shadow: var(--shadow-sm);
-            transition: var(--transition);
-        }
-
-        .month-navigation:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
         .month-title {
@@ -191,22 +179,16 @@
 
         .chart-container {
             width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
             margin-top: 16px;
             border-radius: 12px;
             background-color: var(--yandex-white);
             box-shadow: var(--shadow-sm);
-            transition: var(--transition);
             border: 1px solid var(--yandex-gray);
-        }
-
-        .chart-container:hover {
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
         }
 
         .chart {
-            min-width: 800px;
+            width: 100%;
             padding: 10px;
         }
 
@@ -217,7 +199,6 @@
             transition: var(--transition);
             stroke: var(--yandex-yellow);
             stroke-width: 1;
-            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.1));
         }
 
         .bar:hover {
@@ -238,6 +219,12 @@
             opacity: 0.9;
         }
 
+        .delivery-indicator {
+            fill: var(--yandex-red);
+            rx: 3;
+            ry: 3;
+        }
+
         .current-day-line {
             stroke: var(--yandex-red);
             stroke-width: 2;
@@ -249,7 +236,6 @@
             font-size: 12px;
             fill: var(--yandex-dark-gray);
             font-family: 'YSText', sans-serif;
-            transition: var(--transition);
         }
 
         .axis line {
@@ -789,13 +775,14 @@
 
             // Настройки диаграммы
             const margin = {top: 30, right: 30, bottom: 50, left: 120};
-            const width = Math.max(800, chartContainer.clientWidth) - margin.left - margin.right;
+            const containerWidth = chartContainer.clientWidth;
+            const width = containerWidth - margin.left - margin.right;
             const height = Math.max(400, currentData.length * 40) - margin.top - margin.bottom;
 
             // Создаем SVG
             const svg = d3.select("#gantt-chart")
                 .append("svg")
-                .attr("width", width + margin.left + margin.right)
+                .attr("width", "100%")
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
@@ -869,6 +856,21 @@
                     return Math.max(1, x(end) - x(start));
                 })
                 .attr("height", y.bandwidth());
+
+            // Добавляем индикатор доставки
+            svg.selectAll(".delivery-indicator")
+                .data(currentData.filter(d => d.delivery))
+                .enter()
+                .append("rect")
+                .attr("class", "delivery-indicator")
+                .attr("x", d => {
+                    const start = d.startDate > monthStart ? d.startDate : monthStart;
+                    const end = d.endDate < monthEnd ? d.endDate : monthEnd;
+                    return x(start) + (x(end) - x(start)) / 2 - 5;
+                })
+                .attr("y", d => y(d.serial) + y.bandwidth() / 2 - 5)
+                .attr("width", 10)
+                .attr("height", 10);
 
             // Анимация при наведении
             bars.on("mouseover", function(event, d) {
