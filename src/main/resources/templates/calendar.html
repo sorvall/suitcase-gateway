@@ -581,6 +581,16 @@
             margin-top: 8px;
         }
 
+        .rental-cost {
+            background-color: rgba(255, 204, 0, 0.1);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin: 16px auto;
+            max-width: 320px;
+            text-align: center;
+            font-weight: 500;
+        }
+
         /* Модальное окно */
         .modal-overlay {
             position: fixed;
@@ -852,7 +862,7 @@
 <div class="header">
     <div class="header-content">
         <img src="images/log.png" alt="BikeBoxGo Logo" class="logo">
-        <h1 class="header-title">Аренда велочемоданов | 400 рублей/сутки</h1>
+        <h1 class="header-title">Аренда велочемоданов | 700 рублей/сутки</h1>
         <p class="header-subtitle">Надёжная защита вашего велосипеда при авиаперелётах</p>
         <div class="header-contact">
             <a href="https://t.me/Dear_V_S" class="contact-link" target="_blank">
@@ -868,7 +878,6 @@
         <div class="tab active" data-tab="main">Аренда</div>
         <div class="tab" data-tab="info">О чемодане</div>
         <div class="tab" data-tab="terms">Условия аренды</div>
-        <div class="tab" data-tab="status">Проверка статуса</div>
     </div>
 
     <!-- Основная вкладка (Аренда) -->
@@ -912,6 +921,10 @@
                     <input type="tel" id="phone" name="phone" required
                            placeholder="+7 ___ ___ __ __"
                            pattern="\+7\s\d{3}\s\d{3}\s\d{2}\s\d{2}">
+                </div>
+
+                <div id="rentalCost" class="rental-cost" style="display: none;">
+                    Стоимость аренды: <span id="costValue">0</span> рублей
                 </div>
 
                 <input type="hidden" id="bookingStartDate" name="startDate">
@@ -1055,20 +1068,6 @@
             </p>
         </div>
     </div>
-
-    <!-- Вкладка проверки статуса -->
-    <div id="status" class="tab-content">
-        <div class="form-group">
-            <label for="checkUuidInput">Номер брони:</label>
-            <input type="text" id="checkUuidInput" placeholder="Введите номер брони">
-        </div>
-
-        <button id="checkOrderBtn" class="check-btn">Проверить статус</button>
-
-        <div id="checkOrderResult" class="status-box">
-            <div id="orderStatusContent"></div>
-        </div>
-    </div>
 </div>
 
 <!-- Модальное окно для подтверждения доставки -->
@@ -1081,6 +1080,19 @@
         <div class="modal-buttons">
             <button class="modal-btn modal-btn-primary" id="confirmDeliveryBtn">Да</button>
             <button class="modal-btn modal-btn-secondary" id="cancelDeliveryBtn">Нет</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для подтверждения бронирования -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal">
+        <h3 class="modal-title">Спасибо за оформление заказа!</h3>
+        <div class="modal-content">
+            <p>В ближайшее время менеджер свяжется с вами для подтверждения бронирования.</p>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-primary" id="closeSuccessModalBtn">ОК</button>
         </div>
     </div>
 </div>
@@ -1120,7 +1132,6 @@
             <ul class="footer-links">
                 <li><a href="#" data-tab="info" class="footer-tab-link">О чемодане</a></li>
                 <li><a href="#" data-tab="terms" class="footer-tab-link">Условия аренды</a></li>
-                <li><a href="#" data-tab="status" class="footer-tab-link">Проверить бронь</a></li>
             </ul>
         </div>
     </div>
@@ -1181,8 +1192,41 @@
                 if (endDateInput.value && endDateInput.value < this.value) {
                     endDateInput.value = '';
                 }
+                calculateRentalCost();
             }
         });
+
+        endDateInput.addEventListener('change', calculateRentalCost);
+
+        // Функция расчета стоимости аренды
+        function calculateRentalCost() {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            const rentalCostElement = document.getElementById('rentalCost');
+            const costValueElement = document.getElementById('costValue');
+
+            if (!startDate || !endDate) {
+                rentalCostElement.style.display = 'none';
+                return;
+            }
+
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 чтобы включить оба дня
+
+            // Проверка минимального срока аренды
+            if (diffDays < 7) {
+                document.getElementById('availabilityResult').innerHTML =
+                    "<p style='color: var(--danger-color);'>Минимальный срок аренды - 7 дней!</p>";
+                rentalCostElement.style.display = 'none';
+                return;
+            }
+
+            const cost = diffDays * 400;
+            costValueElement.textContent = cost;
+            rentalCostElement.style.display = 'block';
+        }
 
         // Инициализация карусели
         const carouselInner = document.querySelector('.carousel-inner');
@@ -1366,6 +1410,17 @@
                 return;
             }
 
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+            if (diffDays < 7) {
+                resultContainer.innerHTML = "<p style='color: var(--danger-color);'>Минимальный срок аренды - 7 дней!</p>";
+                bookingSection.classList.remove("show");
+                return;
+            }
+
             try {
                 resultContainer.innerHTML = "<div class='loading'></div><p>Проверяем доступность...</p>";
                 bookingSection.classList.remove("show");
@@ -1400,6 +1455,8 @@
         const deliveryModal = document.getElementById('deliveryModal');
         const confirmDeliveryBtn = document.getElementById('confirmDeliveryBtn');
         const cancelDeliveryBtn = document.getElementById('cancelDeliveryBtn');
+        const successModal = document.getElementById('successModal');
+        const closeSuccessModalBtn = document.getElementById('closeSuccessModalBtn');
         let extraServiceValue = false;
 
         function showDeliveryModal() {
@@ -1408,6 +1465,14 @@
 
         function hideDeliveryModal() {
             deliveryModal.classList.remove('active');
+        }
+
+        function showSuccessModal() {
+            successModal.classList.add('active');
+        }
+
+        function hideSuccessModal() {
+            successModal.classList.remove('active');
         }
 
         confirmDeliveryBtn.addEventListener('click', function() {
@@ -1421,6 +1486,8 @@
             hideDeliveryModal();
             processBooking();
         });
+
+        closeSuccessModalBtn.addEventListener('click', hideSuccessModal);
 
         // Обработчик отправки формы бронирования
         document.getElementById("bookingForm").addEventListener("submit", function(e) {
@@ -1503,92 +1570,16 @@
                 document.getElementById("fullName").value = "";
                 document.getElementById("phone").value = "";
 
-                document.getElementById("checkUuidInput").value = bookingId.replace(/['"]+/g, '');
-
-                switchToStatusTab();
-
-                checkOrderStatus(bookingId.replace(/['"]+/g, ''));
-
                 setTimeout(checkAvailability, 300);
+
+                // Показываем модальное окно с благодарностью
+                showSuccessModal();
 
             } catch (error) {
                 resultContainer.innerHTML = `<p style='color: var(--danger-color);'>Ошибка: ${error.message}</p>`;
                 resultContainer.className = "status-box show";
                 console.error("Ошибка при бронировании:", error);
             }
-        }
-
-        // Проверка статуса заказа
-        document.getElementById("checkOrderBtn").addEventListener("click", function() {
-            const uuid = document.getElementById("checkUuidInput").value.trim();
-            if (!uuid) {
-                showStatusError(document.getElementById("checkOrderResult"), "Введите номер брони!");
-                return;
-            }
-            checkOrderStatus(uuid);
-        });
-
-        async function checkOrderStatus(uuid) {
-            const statusBox = document.getElementById("checkOrderResult");
-            const content = document.getElementById("orderStatusContent");
-
-            if (!statusBox || !content) {
-                console.error("Не найдены необходимые элементы для отображения статуса");
-                return;
-            }
-
-            try {
-                content.innerHTML = "<div class='loading'></div><p>Проверяем статус...</p>";
-                statusBox.className = "status-box show";
-
-                const response = await fetch(`/booking/check?uuid=${encodeURIComponent(uuid)}`);
-
-                if (!response.ok) {
-                    throw new Error(`Ошибка сервера: ${response.status}`);
-                }
-
-                let status = await response.text();
-                if (!status) throw new Error("Пустой ответ от сервера");
-
-                status = status.replace(/['"]+/g, '');
-                const statusText = getStatusText(status);
-
-                const now = new Date();
-                const paymentDeadline = new Date(now.getTime() + 3600000);
-                const deadlineString = paymentDeadline.toLocaleTimeString('ru-RU', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-
-                let statusHtml = `
-                    <h3>Статус заказа</h3>
-                    <p>Номер: ${uuid}</p>
-                    <p>Статус: <strong>${statusText}</strong></p>
-                `;
-
-                if (status === "PENDING") {
-                    statusHtml += `
-                        <div class="payment-section">
-                            <div class="payment-info">
-                                <p>Менеджер свяжется с Вами в ближайшее время</p>
-                                <p>Срок оплаты: до ${deadlineString}</p>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                content.innerHTML = statusHtml;
-                statusBox.className = `status-box ${status.toLowerCase()} show`;
-
-            } catch (error) {
-                showStatusError(statusBox, error.message);
-                console.error("Ошибка при проверке статуса:", error);
-            }
-        }
-
-        function switchToStatusTab() {
-            const statusTab = document.querySelector('.tab[data-tab="status"]');
-            switchTab(statusTab);
         }
 
         function displayAvailableItems(item) {
@@ -1617,31 +1608,7 @@
             uuidInput.disabled = false;
 
             bookingSection.classList.add("show");
-        }
-
-        function showStatusError(container, message) {
-            if (!container) {
-                console.error("Контейнер для ошибки не найден");
-                return;
-            }
-
-            container.innerHTML = `
-                    <div>
-                        <h3>Ошибка</h3>
-                        <p>${message}</p>
-                    </div>
-                `;
-            container.className = "status-box show";
-        }
-
-        function getStatusText(status) {
-            const statusMap = {
-                "PENDING": "Не подтвержден",
-                "CONFIRMED": "Подтвержден",
-                "COMPLETED": "Выполнен",
-                "CANCELLED": "Отменен"
-            };
-            return statusMap[status] || status;
+            calculateRentalCost();
         }
 
         function formatDate(dateString) {
