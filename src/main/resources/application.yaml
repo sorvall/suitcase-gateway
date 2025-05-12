@@ -1,27 +1,35 @@
+server:
+  address: 0.0.0.0
+  port: 443  # Порт для HTTPS
+  ssl:
+    key-store: /root/suitcase-app/keystore.p12
+    key-store-password: changeit  # Замените на пароль вашего .p12 файла
+    key-store-type: PKCS12
+
 spring:
   application:
     name: suitcase-gateway
   boot:
     admin:
       client:
-        url: http://bikeboxgo.ru:8085  # Адрес сервера SBA
+        url: https://bikeboxgo.ru:8085  # Адрес сервера SBA через HTTPS
         instance:
-          name: suitcase-gateway  # Уникальное имя для каждого сервиса!
+          name: suitcase-gateway  # Уникальное имя для каждого сервиса
   cloud:
     gateway:
       routes:
         - id: suitcase-booking
-          uri: http://103.74.93.74:8081
+          uri: https://103.74.93.74:8443  # HTTPS для целевого сервиса
           predicates:
             - Path=/booking/**
 
         - id: suitcase-booking
-          uri: http://103.74.93.74:8081
+          uri: https://103.74.93.74:8443  # HTTPS для целевого сервиса
           predicates:
             - Path=/availability/**
 
         - id: suitcase-booking
-          uri: http://103.74.93.74:8081
+          uri: https://103.74.93.74:8443  # HTTPS для целевого сервиса
           predicates:
             - Path=/dashboard/**
 
@@ -30,9 +38,6 @@ spring:
     suffix: .html
     mode: HTML
     encoding: UTF-8
-server:
-  address: 0.0.0.0
-  port: 80
 
 management:
   endpoints:
@@ -41,4 +46,4 @@ management:
         include: health, metrics, prometheus  # открываем нужные эндпоинты
   metrics:
     tags:
-      application: suitcase-gateway # (опционально) добавляет теги для метрик
+      application: suitcase-gateway  # (опционально) добавляет теги для метрик

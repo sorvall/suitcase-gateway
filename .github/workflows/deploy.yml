@@ -42,6 +42,15 @@ jobs:
           source: "Dockerfile"
           target: "/root/suitcase-app/gateway"
 
+      - name: Copy keystore to remote server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "keystore.p12"
+          target: "/root/suitcase-app"
+
       - name: SSH Command to Build and Run Docker Container
         uses: appleboy/ssh-action@v0.1.5
         with:
