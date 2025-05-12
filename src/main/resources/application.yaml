@@ -20,17 +20,17 @@ spring:
     gateway:
       routes:
         - id: suitcase-booking
-          uri: http://suitcase-booking:8081  # Внутренний адрес контейнера
+          uri: http://suitcase-booking-container:8081  # Внутренний адрес контейнера
           predicates:
             - Path=/booking/**
 
         - id: suitcase-booking
-          uri: http://suitcase-booking:8081  # Внутренний адрес контейнера
+          uri: http://suitcase-booking-container:8081  # Внутренний адрес контейнера
           predicates:
             - Path=/availability/**
 
         - id: suitcase-booking
-          uri: http://suitcase-booking:8081  # Внутренний адрес контейнера
+          uri: http://suitcase-booking-container:8081  # Внутренний адрес контейнера
           predicates:
             - Path=/dashboard/**
 
