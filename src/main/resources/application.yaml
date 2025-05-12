@@ -20,17 +20,17 @@ spring:
     gateway:
       routes:
         - id: suitcase-booking
-          uri: https://103.74.93.74:8443  # HTTPS для целевого сервиса
+          uri: http://suitcase-booking:8081  # HTTPS для целевого сервиса
           predicates:
             - Path=/booking/**
 
         - id: suitcase-booking
-          uri: https://103.74.93.74:8443  # HTTPS для целевого сервиса
+          uri: http://suitcase-booking:8081  # HTTPS для целевого сервиса
           predicates:
             - Path=/availability/**
 
         - id: suitcase-booking
-          uri: https://103.74.93.74:8443  # HTTPS для целевого сервиса
+          uri: http://suitcase-booking:8081  # HTTPS для целевого сервиса
           predicates:
             - Path=/dashboard/**
 
