@@ -44,6 +44,16 @@ jobs:
           source: "Dockerfile"
           target: "/root/suitcase-app/gateway"
 
+      # Шаг 3: Создаем Docker-сеть
+      - name: Create Docker Network
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            # Создаем Docker-сеть (если она еще не существует)
+            docker network create suitcase-network || true
 
       # Шаг 4: Выполняем SSH-команды для сборки и запуска контейнера
       - name: SSH Command to Build and Run Docker Container
@@ -62,5 +72,5 @@ jobs:
             # Построить новый образ
             docker build -t suitcase-gateway .
 
-            # Запустить новый контейнер
-            docker run -d -p 443:443 --name suitcase-gateway-container suitcase-gateway
+            # Запустить новый контейнер и подключить его к сети
+            docker run -d -p 443:443 --name suitcase-gateway-container --network suitcase-network suitcase-gateway
