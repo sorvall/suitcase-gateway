@@ -882,7 +882,7 @@
 <div class="header">
     <div class="header-content">
         <img src="images/log.png" alt="BikeBoxGo Logo" class="logo">
-        <h1 class="header-title">Аренда велочемоданов | 700 рублей/сутки</h1>
+        <h1 class="header-title">Аренда велочемоданов | 400 рублей/сутки</h1>
         <p class="header-subtitle">Надёжная защита вашего велосипеда при авиаперелётах</p>
         <div class="header-contact">
             <a href="https://t.me/Dear_V_S" class="contact-link" target="_blank">
@@ -1243,7 +1243,7 @@
                 return;
             }
 
-            const cost = diffDays * 700;
+            const cost = diffDays * 400;
             costValueElement.textContent = cost;
             rentalCostElement.style.display = 'block';
         }
@@ -1581,7 +1581,7 @@
                 const end = new Date(endDate);
                 const diffTime = Math.abs(end - start);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                const rentalCost = diffDays * 700;
+                const rentalCost = diffDays * 400;
                 const deliveryCost = extraServiceValue ? 1500 : 0;
                 const totalCost = rentalCost + deliveryCost;
 
@@ -1595,7 +1595,7 @@
 
                     <div class="booking-summary">
                         <div class="booking-summary-row">
-                            <span>Стоимость аренды (${diffDays} суток × 700 руб.):</span>
+                            <span>Стоимость аренды (${diffDays} суток × 400 руб.):</span>
                             <span>${rentalCost} руб.</span>
                         </div>
                 `;
