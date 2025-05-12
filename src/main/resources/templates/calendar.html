@@ -591,6 +591,26 @@
             font-weight: 500;
         }
 
+        .booking-summary {
+            margin-top: 16px;
+            padding: 16px;
+            background-color: rgba(0, 185, 86, 0.1);
+            border-radius: var(--border-radius);
+        }
+
+        .booking-summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .booking-summary-total {
+            font-weight: bold;
+            border-top: 1px solid #E6E6E6;
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
         /* Модальное окно */
         .modal-overlay {
             position: fixed;
@@ -862,7 +882,7 @@
 <div class="header">
     <div class="header-content">
         <img src="images/log.png" alt="BikeBoxGo Logo" class="logo">
-        <h1 class="header-title">Аренда велочемоданов | 400 рублей/сутки</h1>
+        <h1 class="header-title">Аренда велочемоданов | 700 рублей/сутки</h1>
         <p class="header-subtitle">Надёжная защита вашего велосипеда при авиаперелётах</p>
         <div class="header-contact">
             <a href="https://t.me/Dear_V_S" class="contact-link" target="_blank">
@@ -1025,7 +1045,7 @@
 
             <h3>Стоимость и сроки</h3>
             <ul>
-                <li>Аренда велочемодана стоит <span class="price-highlight">400 рублей в сутки</span></li>
+                <li>Аренда велочемодана стоит <span class="price-highlight">700 рублей в сутки</span></li>
                 <li>Минимальный срок аренды - <span class="price-highlight">7 суток</span></li>
                 <li>Оплата производится при получении чемодана</li>
             </ul>
@@ -1223,7 +1243,7 @@
                 return;
             }
 
-            const cost = diffDays * 400;
+            const cost = diffDays * 700;
             costValueElement.textContent = cost;
             rentalCostElement.style.display = 'block';
         }
@@ -1503,6 +1523,7 @@
             const fullName = document.getElementById("fullName").value;
             const phoneNumber = document.getElementById("phone").value;
             const resultContainer = document.getElementById("bookingResult");
+            const costValue = document.getElementById("costValue").textContent;
 
             if (!resultContainer) {
                 console.error("Контейнер для результатов бронирования не найден");
@@ -1555,14 +1576,48 @@
 
                 const bookingId = await response.text();
 
-                resultContainer.innerHTML = `
-                        <h3>Бронирование оформлено!</h3>
-                        <p>Номер брони: <strong>${bookingId}</strong></p>
-                        <p>Период: ${formatDate(startDate)} — ${formatDate(endDate)}</p>
-                        <p>Имя: ${fullName}</p>
-                        <p>Телефон: ${phoneNumber}</p>
-                        <p>Доставка: ${extraServiceValue ? 'Да' : 'Нет'}</p>
+                // Рассчитываем стоимость
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                const rentalCost = diffDays * 700;
+                const deliveryCost = extraServiceValue ? 1500 : 0;
+                const totalCost = rentalCost + deliveryCost;
+
+                let bookingHtml = `
+                    <h3>Бронирование оформлено!</h3>
+                    <p>Номер брони: <strong>${bookingId}</strong></p>
+                    <p>Период: ${formatDate(startDate)} — ${formatDate(endDate)}</p>
+                    <p>Имя: ${fullName}</p>
+                    <p>Телефон: ${phoneNumber}</p>
+                    <p>Доставка: ${extraServiceValue ? 'Да (1500 руб.)' : 'Нет'}</p>
+
+                    <div class="booking-summary">
+                        <div class="booking-summary-row">
+                            <span>Стоимость аренды (${diffDays} суток × 700 руб.):</span>
+                            <span>${rentalCost} руб.</span>
+                        </div>
+                `;
+
+                if (extraServiceValue) {
+                    bookingHtml += `
+                        <div class="booking-summary-row">
+                            <span>Стоимость доставки:</span>
+                            <span>1500 руб.</span>
+                        </div>
                     `;
+                }
+
+                bookingHtml += `
+                        <div class="booking-summary-row booking-summary-total">
+                            <span>Итого:</span>
+                            <span>${totalCost} руб.</span>
+                        </div>
+                    </div>
+                `;
+
+                resultContainer.innerHTML = bookingHtml;
                 resultContainer.className = "status-box confirmed show";
 
                 document.getElementById("uuidInput").value = "";
