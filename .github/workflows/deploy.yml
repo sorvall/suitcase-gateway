@@ -63,4 +63,4 @@ jobs:
             docker build -t suitcase-gateway .
 
             # Запустить новый контейнер
-            docker run -d -p 80:80 --name suitcase-gateway-container suitcase-gateway
+            docker run -d -p 80:80 -p 443:443 --name suitcase-gateway-container suitcase-gateway
