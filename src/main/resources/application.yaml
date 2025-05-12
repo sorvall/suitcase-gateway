@@ -2,7 +2,7 @@ server:
   address: 0.0.0.0
   port: 443  # Порт для HTTPS
   ssl:
-    key-store: /root/suitcase-app/keystore.p12
+    key-store: /app/keystore.p12
     key-store-password: changeit  # Замените на пароль вашего .p12 файла
     key-store-type: PKCS12
     key-alias: tomcat
