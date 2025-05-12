@@ -51,7 +51,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "path/to/keystore.p12"  # Локальный путь к keystore.p12 на сервере GitHub Actions
+          source: "root/suitcase-app/keystore.p12"  # Локальный путь к keystore.p12 на сервере GitHub Actions
           target: "/root/suitcase-app/gateway/keystore.p12"  # Путь на удаленном сервере
 
       # Шаг 4: Выполняем SSH-команды для сборки и запуска контейнера
