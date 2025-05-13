@@ -12,10 +12,10 @@ public class TomcatHttpConfig implements WebServerFactoryCustomizer<TomcatServle
     public void customize(TomcatServletWebServerFactory factory) {
         System.out.println("AAAAAAAAAAAAAAAAAAAAAAA");
         Connector connector = new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
-        connector.setPort(80);
         connector.setScheme("http");
         connector.setSecure(false);
-        connector.setRedirectPort(443);
+        connector.setPort(80);
+        connector.setRedirectPort(443); // автоматический редирект на HTTPS
         factory.addAdditionalTomcatConnectors(connector);
     }
 }
