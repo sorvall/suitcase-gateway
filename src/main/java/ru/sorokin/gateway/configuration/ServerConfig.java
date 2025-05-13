@@ -12,6 +12,7 @@ public class ServerConfig {
     @Bean
     public ServletWebServerFactory servletContainer() {
         TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
+        tomcat.setContextPath("");
         tomcat.addAdditionalTomcatConnectors(createHttpConnector());
         return tomcat;
     }
@@ -19,9 +20,9 @@ public class ServerConfig {
     private Connector createHttpConnector() {
         Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
         connector.setScheme("http");
-        connector.setPort(80);
+        connector.setPort(8080);  // Внутренний порт
         connector.setSecure(false);
-        connector.setRedirectPort(443);  // Важно: редирект на HTTPS порт
+        connector.setRedirectPort(443);
         return connector;
     }
 }
