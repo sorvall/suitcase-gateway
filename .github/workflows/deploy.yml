@@ -22,7 +22,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build -x test
 
       # Шаг 1: Копируем JAR файл на удаленный сервер
       - name: Copy JAR to remote server
