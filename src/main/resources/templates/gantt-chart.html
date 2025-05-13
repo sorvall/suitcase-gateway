@@ -17,6 +17,7 @@
             --yandex-dark-gray: #7F8285;
             --yandex-red: #FF3333;
             --yandex-white: #FFFFFF;
+            --yandex-blue: #0066FF;
             --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
             --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -214,15 +215,22 @@
             stroke: var(--yandex-gray);
         }
 
-        .bar.past:hover {
-            fill: var(--yandex-dark-gray);
-            opacity: 0.9;
+        .bar.upcoming {
+            fill: var(--yandex-blue);
+            stroke: #0044CC;
+            opacity: 0.7;
         }
 
-        .delivery-indicator {
-            fill: var(--yandex-red);
-            rx: 3;
-            ry: 3;
+        .bar.active {
+            fill: var(--yandex-yellow-dark);
+            stroke: var(--yandex-yellow);
+        }
+
+        .delivery-icon {
+            font-size: 14px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
         }
 
         .current-day-line {
@@ -632,6 +640,10 @@
                 <span class="modal-label">Доставка:</span>
                 <span class="modal-value" id="modalDelivery">-</span>
             </div>
+            <div class="modal-row">
+                <span class="modal-label">Статус:</span>
+                <span class="modal-value" id="modalStatus">-</span>
+            </div>
         </div>
         <div class="modal-actions">
             <button id="callBtn" class="modal-btn primary">Позвонить</button>
@@ -666,6 +678,7 @@
         const modalPhone = document.getElementById('modalPhone');
         const modalPeriod = document.getElementById('modalPeriod');
         const modalDelivery = document.getElementById('modalDelivery');
+        const modalStatus = document.getElementById('modalStatus');
 
         // Modal functions
         function openModal(data) {
@@ -674,7 +687,8 @@
             modalName.textContent = data.name;
             modalPhone.textContent = data.phone;
             modalPeriod.textContent = `${data.start} — ${data.end}`;
-            modalDelivery.textContent = data.delivery ? 'Да' : 'Нет';
+            modalDelivery.textContent = data.delivery ? 'Да 🚚' : 'Нет';
+            modalStatus.textContent = data.status;
             modalOverlay.classList.add('active');
         }
 
@@ -762,7 +776,7 @@
                 return;
             }
 
-            // Преобразуем даты
+            // Преобразуем даты и определяем статус
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
@@ -770,7 +784,18 @@
                 d.startDate = new Date(d.start);
                 d.endDate = new Date(d.end);
                 d.duration = (d.endDate - d.startDate) / (1000 * 60 * 60 * 24) + 1;
-                d.isPast = d.endDate < today;
+
+                // Определяем статус
+                if (d.endDate < today) {
+                    d.status = 'Завершено';
+                    d.statusClass = 'past';
+                } else if (d.startDate > today) {
+                    d.status = 'Предстоящее';
+                    d.statusClass = 'upcoming';
+                } else {
+                    d.status = 'Активно';
+                    d.statusClass = 'active';
+                }
             });
 
             // Настройки диаграммы
@@ -842,12 +867,12 @@
                     .text("Сегодня");
             }
 
-            // Бары диаграммы
+            // Бары диаграммы с классами статуса
             const bars = svg.selectAll(".bar")
                 .data(currentData)
                 .enter()
                 .append("rect")
-                .attr("class", d => `bar ${d.isPast ? 'past' : ''}`)
+                .attr("class", d => `bar ${d.statusClass}`)
                 .attr("x", d => x(d.startDate > monthStart ? d.startDate : monthStart))
                 .attr("y", d => y(d.serial))
                 .attr("width", d => {
@@ -857,20 +882,19 @@
                 })
                 .attr("height", y.bandwidth());
 
-            // Добавляем индикатор доставки
-            svg.selectAll(".delivery-indicator")
+            // Добавляем иконки доставки (грузовик)
+            svg.selectAll(".delivery-icon")
                 .data(currentData.filter(d => d.delivery))
                 .enter()
-                .append("rect")
-                .attr("class", "delivery-indicator")
+                .append("text")
+                .attr("class", "delivery-icon")
                 .attr("x", d => {
                     const start = d.startDate > monthStart ? d.startDate : monthStart;
                     const end = d.endDate < monthEnd ? d.endDate : monthEnd;
-                    return x(start) + (x(end) - x(start)) / 2 - 5;
+                    return x(start) + (x(end) - x(start)) / 2;
                 })
-                .attr("y", d => y(d.serial) + y.bandwidth() / 2 - 5)
-                .attr("width", 10)
-                .attr("height", 10);
+                .attr("y", d => y(d.serial) + y.bandwidth() / 2)
+                .text("🚚");
 
             // Анимация при наведении
             bars.on("mouseover", function(event, d) {
@@ -904,11 +928,11 @@
                         </div>
                         <div class="tooltip-row">
                             <span class="tooltip-label">Доставка:</span>
-                            <span class="tooltip-value">${d.delivery ? 'Да' : 'Нет'}</span>
+                            <span class="tooltip-value">${d.delivery ? 'Да 🚚' : 'Нет'}</span>
                         </div>
                         <div class="tooltip-row">
                             <span class="tooltip-label">Статус:</span>
-                            <span class="tooltip-value">${d.isPast ? 'Завершено' : 'Активно'}</span>
+                            <span class="tooltip-value">${d.status}</span>
                         </div>
                     `)
                     .style("left", (event.pageX + 15) + "px")
