@@ -15,7 +15,9 @@ ENV DASHBOARD_PASS=your_pass
 
 # Открываем порты
 EXPOSE 443
-EXPOSE 8081
+EXPOSE 80
+
+USER root
 
 # Запускаем JAR файл
 CMD ["java", "-jar", "suitcase-gateway.jar"]
