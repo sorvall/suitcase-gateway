@@ -73,4 +73,4 @@ jobs:
             docker build -t suitcase-gateway .
 
             # Запустить новый контейнер и подключить его к сети
-            docker run -d -p 443:443 -p 80:8080 --name suitcase-gateway-container --network suitcase-network suitcase-gateway
+            docker run -d -p 443:443 -p 80:80 --name suitcase-gateway-container --network suitcase-network suitcase-gateway

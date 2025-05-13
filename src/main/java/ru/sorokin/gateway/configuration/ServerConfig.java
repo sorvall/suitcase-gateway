@@ -34,7 +34,7 @@ public class ServerConfig {
     private Connector httpConnector() {
         Connector connector = new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
         connector.setScheme("http");
-        connector.setPort(8080); // В контейнере это порт, маппится на 80 хоста
+        connector.setPort(80); // В контейнере это порт, маппится на 80 хоста
         connector.setSecure(false);
         connector.setRedirectPort(443); // Перенаправляет на HTTPS
         return connector;
