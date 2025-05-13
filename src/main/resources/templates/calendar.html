@@ -591,6 +591,12 @@
             font-weight: 500;
         }
 
+        .rental-details {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
         .booking-summary {
             margin-top: 16px;
             padding: 16px;
@@ -945,6 +951,7 @@
 
                 <div id="rentalCost" class="rental-cost" style="display: none;">
                     Стоимость аренды: <span id="costValue">0</span> рублей
+                    <div class="rental-details" id="rentalDetails"></div>
                 </div>
 
                 <input type="hidden" id="bookingStartDate" name="startDate">
@@ -1224,6 +1231,7 @@
             const endDate = endDateInput.value;
             const rentalCostElement = document.getElementById('rentalCost');
             const costValueElement = document.getElementById('costValue');
+            const rentalDetailsElement = document.getElementById('rentalDetails');
 
             if (!startDate || !endDate) {
                 rentalCostElement.style.display = 'none';
@@ -1245,8 +1253,21 @@
 
             const cost = diffDays * 400;
             costValueElement.textContent = cost;
+
+            // Добавляем детали расчета
+            rentalDetailsElement.innerHTML = `
+                <div>Период аренды: ${formatDate(startDate)} — ${formatDate(endDate)}</div>
+                <div>Количество дней: ${diffDays}</div>
+                <div>Расчет: ${diffDays} × 400 руб./сутки = ${cost} руб.</div>
+            `;
+
             rentalCostElement.style.display = 'block';
         }
+
+        document.getElementById("availabilityForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            checkAvailability();
+        });
 
         // Инициализация карусели
         const carouselInner = document.querySelector('.carousel-inner');
@@ -1465,11 +1486,6 @@
                 console.error("Ошибка при проверке доступности:", error);
             }
         }
-
-        document.getElementById("availabilityForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            checkAvailability();
-        });
 
         // Модальное окно для подтверждения доставки
         const deliveryModal = document.getElementById('deliveryModal');
