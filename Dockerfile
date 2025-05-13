@@ -15,7 +15,6 @@ ENV DASHBOARD_PASS=your_pass
 
 # Открываем порты
 EXPOSE 443
-EXPOSE 80
 
 USER root
 
