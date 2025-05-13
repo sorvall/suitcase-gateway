@@ -10,6 +10,7 @@ public class TomcatHttpConfig implements WebServerFactoryCustomizer<TomcatServle
 
     @Override
     public void customize(TomcatServletWebServerFactory factory) {
+        System.out.println("AAAAAAAAAAAAAAAAAAAAAAA");
         Connector connector = new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
         connector.setPort(80);
         factory.addAdditionalTomcatConnectors(connector);
