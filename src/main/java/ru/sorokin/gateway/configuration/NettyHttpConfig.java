@@ -1,3 +1,4 @@
+/*
 package ru.sorokin.gateway.configuration;
 
 import io.netty.channel.ChannelOption;
@@ -25,3 +26,4 @@ public class NettyHttpConfig {
         });
     }
 }
+*/
