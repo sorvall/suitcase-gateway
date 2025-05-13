@@ -24,12 +24,11 @@ dependencyManagement {
 }
 
 dependencies {
-	//implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation 'io.micrometer:micrometer-registry-prometheus'
-	implementation 'org.apache.tomcat.embed:tomcat-embed-core'
 	implementation("de.codecentric:spring-boot-admin-starter-client:3.2.0")
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
