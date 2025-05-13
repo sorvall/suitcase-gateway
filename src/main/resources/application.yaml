@@ -14,7 +14,7 @@ spring:
   boot:
     admin:
       client:
-        url: http://bikeboxgo.ru:8085  # Адрес сервера SBA
+        url: http://103.74.93.74:8085  # Адрес сервера SBA
         instance:
           name: suitcase-gateway
 
