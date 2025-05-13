@@ -16,7 +16,7 @@ spring:
       client:
         url: http://suitcase-admin-container:8085  # Адрес сервера SBA
         instance:
-          service-base-url: http://suitcase-notification-gateway:80
+          service-base-url: http://suitcase-gateway-container:80
 
   cloud:
     gateway:
