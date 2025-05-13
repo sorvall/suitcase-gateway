@@ -1,3 +1,4 @@
+/*
 package ru.sorokin.gateway.configuration;
 
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
@@ -19,3 +20,4 @@ public class NettyHttpConfig {
                 }));
     }
 }
+*/

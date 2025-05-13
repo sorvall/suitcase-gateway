@@ -1,3 +1,4 @@
+/*
 package ru.sorokin.gateway.configuration;
 
 import org.springframework.context.annotation.Bean;
@@ -18,3 +19,4 @@ public class SecurityConfig {
     }
 }
 
+*/
