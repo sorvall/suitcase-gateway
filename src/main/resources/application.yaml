@@ -14,9 +14,9 @@ spring:
   boot:
     admin:
       client:
-        url: http://suitcase-admin-container:8085  # Адрес сервера SBA
+        url: http://bikeboxgo.ru:8085  # Адрес сервера SBA
         instance:
-          service-base-url: http://suitcase-gateway-container:80
+          name: suitcase-booking
 
   cloud:
     gateway:
@@ -46,4 +46,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: health, info, metrics, env, loggers
+  endpoint:
+    health:
+      show-details: always
