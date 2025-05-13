@@ -1,4 +1,3 @@
-/*
 package ru.sorokin.gateway.configuration;
 
 import org.springframework.context.annotation.Bean;
@@ -14,14 +13,11 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-                .authorizeExchange(exchanges -> exchanges
-                        .anyExchange().permitAll()  // Разрешаем все запросы
-                )
-                .csrf(ServerHttpSecurity.CsrfSpec::disable)  // Отключаем CSRF
-                // Перенаправление HTTP -> HTTPS (альтернатива requiresChannel из MVC)
-                .redirectToHttps(redirect -> redirect
-                        .httpsRedirectWhen(e -> true)  // Всегда редиректим на HTTPS
-                )
+                .authorizeExchange(exchanges ->
+                        exchanges.anyExchange().permitAll())
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .redirectToHttps(redirect ->
+                        redirect.httpsRedirectWhen(exchange -> exchange.getRequest().getURI().getScheme().equals("http")))
                 .build();
     }
-}*/
+}
