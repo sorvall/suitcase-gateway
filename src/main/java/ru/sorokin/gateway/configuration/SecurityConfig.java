@@ -13,11 +13,9 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-                .authorizeExchange(exchanges ->
-                        exchanges.anyExchange().permitAll())
+                .authorizeExchange(exchanges -> exchanges.anyExchange().permitAll())
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .redirectToHttps(redirect ->
-                        redirect.httpsRedirectWhen(exchange -> exchange.getRequest().getURI().getScheme().equals("http")))
-                .build();
+                .build(); // редирект делает NettyHttpConfig, не здесь
     }
 }
+

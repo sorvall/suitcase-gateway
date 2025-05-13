@@ -1,4 +1,3 @@
-/*
 package ru.sorokin.gateway.configuration;
 
 import io.netty.channel.ChannelOption;
@@ -14,16 +13,15 @@ public class NettyHttpConfig {
     @Bean
     public WebServerFactoryCustomizer<NettyReactiveWebServerFactory> nettyCustomizer() {
         return factory -> factory.addServerCustomizers(httpServer -> {
-            HttpServer http = HttpServer.create()
-                    .port(80)  // Открыть HTTP порт
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
-
-            return httpServer
-                    .route(routes -> routes.route(req -> true, (request, response) ->
-                            response.status(301)
-                                    .header("Location", "https://" + request.requestHeaders().get("Host"))
-                                    .send()));
+            return HttpServer.create()
+                    .port(80)
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
+                    .route(routes -> routes.route(req -> true, (request, response) -> {
+                        String host = request.requestHeaders().get("Host");
+                        return response.status(301)
+                                .header("Location", "https://" + host + request.uri())
+                                .send();
+                    }));
         });
     }
 }
-*/
