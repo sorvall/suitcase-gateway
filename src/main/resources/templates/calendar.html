@@ -689,7 +689,7 @@
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
             width: 90%;
-            max-width: 400px;
+            max-width: 500px;
             padding: 24px;
             transform: translateY(20px);
             transition: all 0.3s ease;
@@ -700,10 +700,11 @@
         }
 
         .modal-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 500;
             margin-bottom: 16px;
             text-align: center;
+            color: var(--success-color);
         }
 
         .modal-content {
@@ -718,14 +719,14 @@
         }
 
         .modal-btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: var(--border-radius);
             border: none;
             cursor: pointer;
             font-weight: 500;
             transition: var(--transition);
             flex: 1;
-            max-width: 120px;
+            max-width: 200px;
         }
 
         .modal-btn-primary {
@@ -744,6 +745,19 @@
 
         .modal-btn-secondary:hover {
             background-color: #D9D9D9;
+        }
+
+        .modal-booking-id {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: var(--secondary-color);
+        }
+
+        .modal-contact-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
         }
 
         /* Подвал */
@@ -1158,9 +1172,18 @@
 <!-- Модальное окно для подтверждения бронирования -->
 <div class="modal-overlay" id="successModal">
     <div class="modal">
-        <h3 class="modal-title">Спасибо за оформление заказа!</h3>
+        <h3 class="modal-title">Бронирование оформлено!</h3>
         <div class="modal-content">
-            <p>В ближайшее время менеджер свяжется с вами для подтверждения бронирования.</p>
+            <p>Ваша заявка успешно принята. Мы свяжемся с вами по указанному телефону для подтверждения заказа.</p>
+            <div class="modal-booking-id" id="modalBookingId"></div>
+            <div class="modal-contact-info">
+                <p>Если у вас есть вопросы, вы можете связаться с нами:</p>
+                <p>
+                    <a href="https://t.me/Dear_V_S" class="contact-phone" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-telegram"></i> Telegram: @bikeboxgo
+                    </a>
+                </p>
+            </div>
         </div>
         <div class="modal-buttons">
             <button class="modal-btn modal-btn-primary" id="closeSuccessModalBtn">ОК</button>
@@ -1531,13 +1554,15 @@
             }
         }
 
-        // Модальное окно для подтверждения доставки
+        // Модальные окна
         const deliveryModal = document.getElementById('deliveryModal');
         const confirmDeliveryBtn = document.getElementById('confirmDeliveryBtn');
         const cancelDeliveryBtn = document.getElementById('cancelDeliveryBtn');
         const successModal = document.getElementById('successModal');
         const closeSuccessModalBtn = document.getElementById('closeSuccessModalBtn');
+        const modalBookingId = document.getElementById('modalBookingId');
         let extraServiceValue = false;
+        let autoCloseTimer;
 
         function showDeliveryModal() {
             deliveryModal.classList.add('active');
@@ -1547,12 +1572,21 @@
             deliveryModal.classList.remove('active');
         }
 
-        function showSuccessModal() {
+        function showSuccessModal(bookingId) {
+            // Устанавливаем номер бронирования в модальное окно
+            modalBookingId.textContent = `Номер брони: ${bookingId}`;
+
+            // Показываем модальное окно
             successModal.classList.add('active');
+
+            // Устанавливаем таймер на автоматическое закрытие через 30 секунд
+            clearTimeout(autoCloseTimer);
+            autoCloseTimer = setTimeout(hideSuccessModal, 30000);
         }
 
         function hideSuccessModal() {
             successModal.classList.remove('active');
+            clearTimeout(autoCloseTimer);
         }
 
         confirmDeliveryBtn.addEventListener('click', function() {
@@ -1636,59 +1670,17 @@
 
                 const bookingId = await response.text();
 
-                // Рассчитываем стоимость
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                const rentalCost = diffDays * 400;
-                const deliveryCost = extraServiceValue ? 1500 : 0;
-                const totalCost = rentalCost + deliveryCost;
-
-                let bookingHtml = `
-                    <h3>Бронирование оформлено!</h3>
-                    <p>Номер брони: <strong>${bookingId}</strong></p>
-                    <p>Период: ${formatDate(startDate)} — ${formatDate(endDate)}</p>
-                    <p>Имя: ${fullName}</p>
-                    <p>Телефон: ${phoneNumber}</p>
-                    <p>Доставка: ${extraServiceValue ? 'Да (1500 руб.)' : 'Нет'}</p>
-
-                    <div class="booking-summary">
-                        <div class="booking-summary-row">
-                            <span>Стоимость аренды (${diffDays} суток × 400 руб.):</span>
-                            <span>${rentalCost} руб.</span>
-                        </div>
-                `;
-
-                if (extraServiceValue) {
-                    bookingHtml += `
-                        <div class="booking-summary-row">
-                            <span>Стоимость доставки:</span>
-                            <span>1500 руб.</span>
-                        </div>
-                    `;
-                }
-
-                bookingHtml += `
-                        <div class="booking-summary-row booking-summary-total">
-                            <span>Итого:</span>
-                            <span>${totalCost} руб.</span>
-                        </div>
-                    </div>
-                `;
-
-                resultContainer.innerHTML = bookingHtml;
-                resultContainer.className = "status-box confirmed show";
-
+                // Очищаем форму
                 document.getElementById("uuidInput").value = "";
                 document.getElementById("uuidInput").disabled = true;
                 document.getElementById("fullName").value = "";
                 document.getElementById("phone").value = "";
 
-                setTimeout(checkAvailability, 300);
+                // Показываем модальное окно с подтверждением
+                showSuccessModal(bookingId);
 
-                // Показываем модальное окно с благодарностью
-                showSuccessModal();
+                // Обновляем проверку доступности
+                setTimeout(checkAvailability, 300);
 
             } catch (error) {
                 resultContainer.innerHTML = `<p style='color: var(--danger-color);'>Ошибка: ${error.message}</p>`;
