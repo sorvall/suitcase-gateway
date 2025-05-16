@@ -1690,6 +1690,10 @@
                 document.getElementById("fullName").value = "";
                 document.getElementById("phone").value = "";
 
+                // Скрываем сообщение о процессе отправки
+                resultContainer.className = "status-box";
+                resultContainer.innerHTML = "";
+
                 // Показываем модальное окно с подтверждением
                 showSuccessModal(bookingId);
 
