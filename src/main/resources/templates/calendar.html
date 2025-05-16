@@ -626,20 +626,49 @@
             margin-top: 8px;
         }
 
+        /* Новый стиль для блока стоимости аренды */
         .rental-cost {
-            background-color: rgba(255, 204, 0, 0.1);
-            padding: 12px;
+            background-color: white;
+            padding: 16px;
             border-radius: var(--border-radius);
             margin: 16px auto;
             max-width: 320px;
             text-align: center;
             font-weight: 500;
+            border: 2px solid var(--primary-color);
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rental-cost::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background-color: var(--primary-color);
+        }
+
+        .rental-cost-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--success-color);
+            margin: 8px 0;
         }
 
         .rental-details {
-            margin-top: 8px;
+            margin-top: 12px;
             font-size: 14px;
             color: #666;
+            text-align: left;
+            padding: 8px 0;
+            border-top: 1px dashed #E6E6E6;
+        }
+
+        .rental-details div {
+            margin-bottom: 6px;
         }
 
         .booking-summary {
@@ -1007,7 +1036,8 @@
                 </div>
 
                 <div id="rentalCost" class="rental-cost" style="display: none;">
-                    Стоимость аренды: <span id="costValue" itemprop="price">0</span> рублей
+                    <div>Стоимость аренды:</div>
+                    <div class="rental-cost-value" id="costValue" itemprop="price">0</div>
                     <div class="rental-details" id="rentalDetails"></div>
                 </div>
 
@@ -1039,7 +1069,6 @@
                 <h3>Преимущества</h3>
                 <ul>
                     <li>Полная защита вашего велосипеда при перелёте</li>
-                    <li>Экономия до 50% по сравнению с покупкой</li>
                     <li>Удобство транспортировки благодаря колесам и выдвижной ручке</li>
                     <li>Возможность доставки по Москве</li>
                 </ul>
@@ -1629,7 +1658,7 @@
             }
 
             try {
-                resultContainer.innerHTML = "<div class='loading'></div><p>Оформляем бронирование...</p>";
+                resultContainer.innerHTML = "<div class='loading'></div><p>Отправляем данные...</p>";
                 resultContainer.className = "status-box show";
 
                 const bookingData = {
