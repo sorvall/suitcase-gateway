@@ -93,18 +93,36 @@
             padding: 20px 0;
             margin-bottom: 24px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--secondary-color), var(--primary-color), var(--secondary-color));
         }
 
         .header-content {
             max-width: 800px;
             margin: 0 auto;
             padding: 0 24px;
+            position: relative;
         }
 
         .logo {
             height: 80px;
             width: auto;
             margin-bottom: 12px;
+            transition: var(--transition);
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
         }
 
         .header-title {
@@ -113,6 +131,20 @@
             color: var(--secondary-color);
             margin-bottom: 8px;
             letter-spacing: -0.3px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .header-title::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background-color: var(--secondary-color);
+            border-radius: 2px;
         }
 
         .header-subtitle {
@@ -120,6 +152,7 @@
             color: rgba(0,0,0,0.7);
             max-width: 600px;
             margin: 0 auto 16px;
+            line-height: 1.6;
         }
 
         .header-contact {
@@ -131,17 +164,20 @@
         .contact-link {
             display: inline-flex;
             align-items: center;
-            padding: 8px 16px;
+            padding: 10px 20px;
             background-color: var(--secondary-color);
             color: var(--primary-color);
             border-radius: var(--border-radius);
             font-weight: 500;
             text-decoration: none;
             transition: var(--transition);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .contact-link:hover {
             background-color: rgba(0,0,0,0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
 
         .contact-link i {
@@ -977,8 +1013,7 @@
     <div class="header-content">
         <img src="images/log.png" alt="BikeBoxGo - аренда велочемоданов в Москве" class="logo" itemprop="logo">
         <h1 class="header-title" itemprop="name">Аренда велочемоданов | 400 рублей/сутки</h1>
-        <p class="header-subtitle" itemprop="description">Надёжная защита вашего велосипеда при авиаперелётах</p>
-        <p class="header-subtitle" itemprop="description">Доставка по Москве</p>
+        <p class="header-subtitle" itemprop="description">Надёжная защита вашего велосипеда при авиаперелётах с доставкой по Москве</p>
         <div class="header-contact">
             <a href="https://t.me/Dear_V_S" class="contact-link" target="_blank" rel="noopener noreferrer">
                 <i class="fab fa-telegram"></i>
