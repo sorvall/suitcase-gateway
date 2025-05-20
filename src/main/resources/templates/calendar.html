@@ -97,14 +97,13 @@
             overflow: hidden;
         }
 
-        .header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--secondary-color), var(--primary-color), var(--secondary-color));
+        .header {
+            background-color: var(--primary-color);
+            padding: 20px 0;
+            margin-bottom: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
         .header-content {
@@ -114,10 +113,15 @@
             position: relative;
         }
 
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
         .logo {
             height: 80px;
             width: auto;
-            margin-bottom: 12px;
             transition: var(--transition);
         }
 
@@ -1011,7 +1015,9 @@
 <body>
 <header class="header" itemscope itemtype="https://schema.org/LocalBusiness">
     <div class="header-content">
-        <img src="images/log.png" alt="BikeBoxGo - аренда велочемоданов в Москве" class="logo" itemprop="logo">
+        <div class="logo-container">
+            <img src="images/log.png" alt="BikeBoxGo - аренда велочемоданов в Москве" class="logo" itemprop="logo">
+        </div>
         <h1 class="header-title" itemprop="name">Аренда велочемоданов | 400 рублей/сутки</h1>
         <p class="header-subtitle" itemprop="description">Надёжная защита вашего велосипеда при авиаперелётах с доставкой по Москве</p>
         <div class="header-contact">
