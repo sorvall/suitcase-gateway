@@ -978,6 +978,7 @@
         <img src="images/log.png" alt="BikeBoxGo - аренда велочемоданов в Москве" class="logo" itemprop="logo">
         <h1 class="header-title" itemprop="name">Аренда велочемоданов | 400 рублей/сутки</h1>
         <p class="header-subtitle" itemprop="description">Надёжная защита вашего велосипеда при авиаперелётах</p>
+        <p class="header-subtitle" itemprop="description">Доставка по Москве</p>
         <div class="header-contact">
             <a href="https://t.me/Dear_V_S" class="contact-link" target="_blank" rel="noopener noreferrer">
                 <i class="fab fa-telegram"></i>
@@ -1037,7 +1038,7 @@
 
                 <div id="rentalCost" class="rental-cost" style="display: none;">
                     <div>Стоимость аренды:</div>
-                    <div class="rental-cost-value" id="costValue" itemprop="price">0</div>
+                    <div class="rental-cost-value" id="costValue" itemprop="price">0 руб.</div>
                     <div class="rental-details" id="rentalDetails"></div>
                 </div>
 
@@ -1333,7 +1334,7 @@
             }
 
             const cost = diffDays * 400;
-            costValueElement.textContent = cost;
+            costValueElement.textContent = cost + ' руб.';
 
             // Добавляем детали расчета
             rentalDetailsElement.innerHTML = `
