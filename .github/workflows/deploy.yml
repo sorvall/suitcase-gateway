@@ -2,7 +2,9 @@ name: Build and Deploy Gateway
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
