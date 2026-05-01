@@ -1,5 +1,5 @@
-# Используем официальный образ OpenJDK
-FROM openjdk:21-jdk-slim
+# Java 21 runtime (образ openjdk:* на Docker Hub больше не публикуется)
+FROM eclipse-temurin:21-jre-jammy
 
 # Указываем рабочую директорию в контейнере
 WORKDIR /app
