@@ -5,7 +5,7 @@ server:
     key-store: /app/keystore.p12
     key-store-password: changeit  # Замените на пароль вашего .p12 файла
     key-store-type: PKCS12
-    key-alias: tomcat
+    key-alias: "1"
     enabled: true
 
 spring:
