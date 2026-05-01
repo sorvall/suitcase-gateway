@@ -12,13 +12,14 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
+          cache: gradle
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -26,53 +27,54 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test
 
-      # Шаг 1: Копируем JAR файл на удаленный сервер
-      - name: Copy JAR to remote server
-        uses: appleboy/scp-action@v0.1.4
+      - name: Copy JAR and Dockerfile to remote server
+        uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          source: "build/libs/suitcase-gateway-0.0.1-SNAPSHOT.jar"
+          source: "build/libs/suitcase-gateway-0.0.1-SNAPSHOT.jar,Dockerfile"
           target: "/root/suitcase-app/gateway"
 
-      # Шаг 2: Копируем Dockerfile на удаленный сервер
-      - name: Copy Dockerfile to remote server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          source: "Dockerfile"
-          target: "/root/suitcase-app/gateway"
-
-      # Шаг 3: Создаем Docker-сеть
       - name: Create Docker Network
-        uses: appleboy/ssh-action@v0.1.5
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            # Создаем Docker-сеть (если она еще не существует)
+            set -euo pipefail
             docker network create suitcase-network || true
 
-      # Шаг 4: Выполняем SSH-команды для сборки и запуска контейнера
-      - name: SSH Command to Build and Run Docker Container
-        uses: appleboy/ssh-action@v0.1.5
+      - name: Build image and run container on server
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
+          command_timeout: 15m
           script: |
+            set -euo pipefail
             cd /root/suitcase-app/gateway
 
-            # Остановить и удалить старый контейнер, если он существует
             docker stop suitcase-gateway-container || true
             docker rm suitcase-gateway-container || true
 
-            # Построить новый образ
             docker build -t suitcase-gateway .
 
-            # Запустить новый контейнер и подключить его к сети
-            docker run -d -p 443:443 -e SERVER_SSL_KEY_ALIAS=1 --name suitcase-gateway-container --network suitcase-network suitcase-gateway
+            docker run -d -p 443:443 -e SERVER_SSL_KEY_ALIAS=1 \
+              --name suitcase-gateway-container \
+              --network suitcase-network \
+              suitcase-gateway
+
+      - name: Verify container and TLS on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            set -euo pipefail
+            docker ps --filter name=suitcase-gateway-container --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+            echo | openssl s_client -connect 127.0.0.1:443 -servername www.bikeboxgo.ru 2>/dev/null \
+              | openssl x509 -noout -subject -dates
