@@ -323,8 +323,8 @@
             var cDisabled = canConfirm(r.status) ? '' : 'disabled';
             var xDisabled = canCancel(r.status) ? '' : 'disabled';
             return '<tr data-id="' + escapeHtml(id) + '">' +
-                '<td class="mono" title="' + escapeHtml(id) + '">' + escapeHtml(String(id).substring(0, 8)) + '…</td>' +
-                '<td class="mono" title="' + escapeHtml(r.suitcaseId) + '">' + (r.suitcaseId ? escapeHtml(String(r.suitcaseId).substring(0, 8)) + '…' : '—') + '</td>' +
+                '<td class="mono">' + escapeHtml(id) + '</td>' +
+                '<td class="mono">' + (r.suitcaseId ? escapeHtml(r.suitcaseId) : '—') + '</td>' +
                 '<td>' + escapeHtml(r.startDate || '—') + '</td>' +
                 '<td>' + escapeHtml(r.endDate || '—') + '</td>' +
                 '<td><span class="' + badgeClass + '">' + escapeHtml(statusLabel(r.status)) + '</span><br><small class="mono">' + escapeHtml(r.status || '') + '</small></td>' +
