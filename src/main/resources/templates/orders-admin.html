@@ -9,38 +9,43 @@
         :root {
             --primary-color: #FFCC00;
             --secondary-color: #000000;
-            --light-bg: #f5f5f6;
-            --border-radius: 8px;
+            --light-bg: #eef0f2;
+            --surface: #ffffff;
+            --border-radius: 10px;
             --success: #00B956;
             --danger: #FF3333;
-            --muted: #7F8285;
+            --muted: #6b7280;
+            --pad-x: clamp(12px, 3vw, 32px);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--light-bg);
             color: var(--secondary-color);
             line-height: 1.5;
             min-height: 100vh;
         }
         .topbar {
-            background: var(--primary-color);
-            padding: 16px 24px;
+            background: linear-gradient(180deg, var(--primary-color) 0%, #f5d54a 100%);
+            padding: 14px var(--pad-x);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
-        .topbar h1 { font-size: 1.25rem; font-weight: 700; }
-        .topbar-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .topbar h1 { font-size: clamp(1.1rem, 2.5vw, 1.35rem); font-weight: 800; letter-spacing: -0.02em; }
+        .topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         a.home-link {
             color: var(--secondary-color);
-            font-weight: 500;
+            font-weight: 600;
             text-decoration: none;
-            border-bottom: 1px solid transparent;
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            background: rgba(255,255,255,0.35);
         }
-        a.home-link:hover { border-bottom-color: var(--secondary-color); }
+        a.home-link:hover { background: rgba(255,255,255,0.55); }
         button {
             cursor: pointer;
             border: none;
@@ -48,52 +53,173 @@
             padding: 10px 18px;
             font-weight: 600;
             font-size: 14px;
-            transition: transform 0.15s, box-shadow 0.15s;
+            transition: transform 0.12s, box-shadow 0.12s;
         }
         button:hover:not(:disabled) { transform: translateY(-1px); }
+        button:active:not(:disabled) { transform: translateY(0); }
         button:disabled { opacity: 0.45; cursor: not-allowed; }
         .btn-refresh {
             background: var(--secondary-color);
             color: var(--primary-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
-        .btn-confirm { background: var(--success); color: #fff; }
-        .btn-cancel { background: var(--danger); color: #fff; }
-        .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
-        .status-line { font-size: 14px; color: var(--muted); margin-bottom: 16px; min-height: 1.5em; }
-        .status-line.error { color: var(--danger); }
-        .loading { padding: 48px; text-align: center; color: var(--muted); }
-        .table-scroll { overflow-x: auto; background: #fff; border-radius: var(--border-radius); box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+        .btn-confirm { background: var(--success); color: #fff; font-size: 13px; padding: 8px 14px; }
+        .btn-cancel { background: var(--danger); color: #fff; font-size: 13px; padding: 8px 14px; }
+
+        .toolbar {
+            width: 100%;
+            padding: 16px var(--pad-x) 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+        .filter-block {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: var(--surface);
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .filter-block label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            user-select: none;
+        }
+        .filter-block input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--secondary-color);
+            cursor: pointer;
+        }
+        .count-badge {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+        .count-badge strong { color: var(--secondary-color); }
+
+        .main-inner {
+            width: 100%;
+            max-width: 100%;
+            padding: 16px var(--pad-x) 32px;
+        }
+        .status-line { font-size: 14px; color: var(--muted); margin-bottom: 12px; min-height: 1.4em; }
+        .status-line.error { color: var(--danger); font-weight: 500; }
+        .loading { padding: 56px 24px; text-align: center; color: var(--muted); font-size: 15px; }
+
+        /* Desktop table */
+        .orders-desktop {
+            display: block;
+            width: 100%;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
         table {
             width: 100%;
+            min-width: 720px;
             border-collapse: collapse;
             font-size: 14px;
         }
         th, td {
-            padding: 12px 14px;
+            padding: 14px 16px;
             text-align: left;
-            border-bottom: 1px solid #e8e8e8;
+            border-bottom: 1px solid #ececec;
         }
         th {
-            background: #fafafa;
-            font-weight: 600;
+            background: #f8f9fa;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #374151;
             white-space: nowrap;
         }
+        tbody tr:hover { background: #fafafa; }
         tr:last-child td { border-bottom: none; }
-        .mono { font-family: ui-monospace, monospace; font-size: 12px; word-break: break-all; }
+        .mono { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12px; word-break: break-all; }
         .status-badge {
             display: inline-block;
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 999px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
         }
-        .st-PENDING { background: #fff3cd; }
-        .st-IN_USE { background: #cce5ff; }
-        .st-CONFIRMED { background: #d4edda; }
-        .st-CANCELLED { background: #f0f0f0; color: #555; }
-        .st-COMPLETED { background: #e2e3e5; }
+        .st-PENDING { background: #fff3cd; color: #856404; }
+        .st-IN_USE { background: #cce5ff; color: #004085; }
+        .st-CONFIRMED { background: #d4edda; color: #155724; }
+        .st-CANCELLED { background: #e9ecef; color: #555; }
+        .st-COMPLETED { background: #dee2e6; color: #333; }
         .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-        .empty { padding: 48px; text-align: center; color: var(--muted); }
+        .empty {
+            padding: 56px 24px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 15px;
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+        }
+
+        /* Mobile cards */
+        .orders-mobile { display: none; width: 100%; gap: 12px; flex-direction: column; }
+        .order-card {
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .order-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .order-card-row {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: 8px 12px;
+            font-size: 14px;
+            margin-bottom: 8px;
+            align-items: start;
+        }
+        .order-card-row span:first-child { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+        .order-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid #eee;
+        }
+        .order-card-actions button { flex: 1; min-width: 120px; }
+
+        @media (max-width: 900px) {
+            .orders-desktop { display: none; }
+            .orders-mobile { display: flex; }
+            table { min-width: 0; }
+        }
+        @media (min-width: 901px) {
+            .orders-mobile { display: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -101,11 +227,21 @@
     <h1>Управление заказами</h1>
     <div class="topbar-actions">
         <a class="home-link" href="/">← На главную</a>
-        <button type="button" class="btn-refresh" id="refreshBtn">Обновить список</button>
+        <button type="button" class="btn-refresh" id="refreshBtn">Обновить</button>
     </div>
 </header>
 
-<main class="wrap">
+<div class="toolbar">
+    <div class="filter-block">
+        <label>
+            <input type="checkbox" id="filterPendingOnly">
+            <span>Только «Ожидает» (PENDING)</span>
+        </label>
+        <span class="count-badge" id="countBadge"></span>
+    </div>
+</div>
+
+<main class="main-inner">
     <p class="status-line" id="statusLine"></p>
     <div id="contentArea" class="loading">Загрузка…</div>
 </main>
@@ -115,6 +251,10 @@
     const statusLine = document.getElementById('statusLine');
     const contentArea = document.getElementById('contentArea');
     const refreshBtn = document.getElementById('refreshBtn');
+    const filterPendingOnly = document.getElementById('filterPendingOnly');
+    const countBadge = document.getElementById('countBadge');
+
+    let allOrders = [];
 
     const statusLabels = {
         PENDING: 'Ожидает',
@@ -141,31 +281,86 @@
         return status !== 'CANCELLED' && status !== 'COMPLETED';
     }
 
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function getFilteredRows() {
+        if (!filterPendingOnly.checked) return allOrders.slice();
+        return allOrders.filter(function (r) { return r.status === 'PENDING'; });
+    }
+
+    function updateCountBadge(shown, total) {
+        if (!total && !allOrders.length) {
+            countBadge.innerHTML = '';
+            return;
+        }
+        countBadge.innerHTML = filterPendingOnly.checked
+            ? 'Показано: <strong>' + shown + '</strong> из ' + total + ' (только ожидают)'
+            : 'Всего заказов: <strong>' + total + '</strong>';
+    }
+
     function renderTable(rows) {
+        const total = allOrders.length;
+        updateCountBadge(rows.length, total);
+
         if (!rows.length) {
-            contentArea.innerHTML = '<div class="empty">Нет заказов</div>';
+            var msg = filterPendingOnly.checked && total > 0
+                ? 'Нет заказов в статусе «Ожидает»'
+                : 'Нет заказов';
+            contentArea.innerHTML = '<div class="empty">' + msg + '</div>';
             return;
         }
 
-        const thead = '<tr><th>ID брони</th><th>Чемодан</th><th>Начало</th><th>Окончание</th><th>Статус</th><th>Действия</th></tr>';
-        const body = rows.map(function (r) {
-            const id = r.id;
-            const badgeClass = 'status-badge st-' + (r.status || '').replace(/[^A-Z_]/g, '_');
-            const cDisabled = canConfirm(r.status) ? '' : 'disabled';
-            const xDisabled = canCancel(r.status) ? '' : 'disabled';
-            return '<tr data-id="' + id + '">' +
-                '<td class="mono" title="' + id + '">' + id.substring(0, 8) + '…</td>' +
-                '<td class="mono" title="' + (r.suitcaseId || '') + '">' + (r.suitcaseId ? r.suitcaseId.substring(0, 8) + '…' : '—') + '</td>' +
-                '<td>' + (r.startDate || '—') + '</td>' +
-                '<td>' + (r.endDate || '—') + '</td>' +
-                '<td><span class="' + badgeClass + '">' + statusLabel(r.status) + '</span><br><small class="mono">' + (r.status || '') + '</small></td>' +
+        function rowDesktop(r) {
+            var id = r.id;
+            var badgeClass = 'status-badge st-' + (r.status || '').replace(/[^A-Z_]/g, '_');
+            var cDisabled = canConfirm(r.status) ? '' : 'disabled';
+            var xDisabled = canCancel(r.status) ? '' : 'disabled';
+            return '<tr data-id="' + escapeHtml(id) + '">' +
+                '<td class="mono" title="' + escapeHtml(id) + '">' + escapeHtml(String(id).substring(0, 8)) + '…</td>' +
+                '<td class="mono" title="' + escapeHtml(r.suitcaseId) + '">' + (r.suitcaseId ? escapeHtml(String(r.suitcaseId).substring(0, 8)) + '…' : '—') + '</td>' +
+                '<td>' + escapeHtml(r.startDate || '—') + '</td>' +
+                '<td>' + escapeHtml(r.endDate || '—') + '</td>' +
+                '<td><span class="' + badgeClass + '">' + escapeHtml(statusLabel(r.status)) + '</span><br><small class="mono">' + escapeHtml(r.status || '') + '</small></td>' +
                 '<td class="actions">' +
-                '<button type="button" class="btn-confirm" data-action="confirm" data-id="' + id + '" ' + cDisabled + '>Подтвердить</button>' +
-                '<button type="button" class="btn-cancel" data-action="cancel" data-id="' + id + '" ' + xDisabled + '>Отменить</button>' +
+                '<button type="button" class="btn-confirm" data-action="confirm" data-id="' + escapeHtml(id) + '" ' + cDisabled + '>Подтвердить</button>' +
+                '<button type="button" class="btn-cancel" data-action="cancel" data-id="' + escapeHtml(id) + '" ' + xDisabled + '>Отменить</button>' +
                 '</td></tr>';
-        }).join('');
+        }
 
-        contentArea.innerHTML = '<div class="table-scroll"><table><thead>' + thead + '</thead><tbody>' + body + '</tbody></table></div>';
+        function rowMobile(r) {
+            var id = r.id;
+            var badgeClass = 'status-badge st-' + (r.status || '').replace(/[^A-Z_]/g, '_');
+            var cDisabled = canConfirm(r.status) ? '' : 'disabled';
+            var xDisabled = canCancel(r.status) ? '' : 'disabled';
+            return '<article class="order-card" data-id="' + escapeHtml(id) + '">' +
+                '<div class="order-card-header">' +
+                '<span class="' + badgeClass + '">' + escapeHtml(statusLabel(r.status)) + '</span>' +
+                '</div>' +
+                '<div class="order-card-row"><span>Бронь</span><span class="mono">' + escapeHtml(id) + '</span></div>' +
+                '<div class="order-card-row"><span>Чемодан</span><span class="mono">' + escapeHtml(r.suitcaseId || '—') + '</span></div>' +
+                '<div class="order-card-row"><span>Период</span><span>' + escapeHtml(r.startDate || '—') + ' — ' + escapeHtml(r.endDate || '—') + '</span></div>' +
+                '<div class="order-card-row"><span>Статус API</span><span class="mono">' + escapeHtml(r.status || '') + '</span></div>' +
+                '<div class="order-card-actions">' +
+                '<button type="button" class="btn-confirm" data-action="confirm" data-id="' + escapeHtml(id) + '" ' + cDisabled + '>Подтвердить</button>' +
+                '<button type="button" class="btn-cancel" data-action="cancel" data-id="' + escapeHtml(id) + '" ' + xDisabled + '>Отменить</button>' +
+                '</div></article>';
+        }
+
+        var thead = '<tr><th>ID брони</th><th>Чемодан</th><th>Начало</th><th>Окончание</th><th>Статус</th><th>Действия</th></tr>';
+        var desktopBody = rows.map(rowDesktop).join('');
+        var mobileBody = rows.map(rowMobile).join('');
+
+        contentArea.innerHTML =
+            '<div class="orders-desktop"><div class="table-scroll"><table><thead>' + thead + '</thead><tbody>' +
+            desktopBody + '</tbody></table></div></div>' +
+            '<div class="orders-mobile">' + mobileBody + '</div>';
 
         contentArea.querySelectorAll('button[data-action]').forEach(function (btn) {
             btn.addEventListener('click', function () {
@@ -175,6 +370,10 @@
                 if (action === 'cancel') postAction(bid, 'cancel');
             });
         });
+    }
+
+    function applyFilterAndRender() {
+        renderTable(getFilteredRows());
     }
 
     function loadOrders() {
@@ -189,11 +388,14 @@
             })
             .then(function (data) {
                 if (!Array.isArray(data)) throw new Error('Ожидался массив');
-                renderTable(data);
+                allOrders = data;
+                applyFilterAndRender();
             })
             .catch(function (e) {
                 setStatus('Не удалось загрузить заказы: ' + e.message, true);
+                allOrders = [];
                 contentArea.innerHTML = '<div class="empty">Ошибка загрузки</div>';
+                updateCountBadge(0, 0);
             })
             .finally(function () {
                 refreshBtn.disabled = false;
@@ -223,6 +425,7 @@
     }
 
     refreshBtn.addEventListener('click', loadOrders);
+    filterPendingOnly.addEventListener('change', applyFilterAndRender);
     loadOrders();
 })();
 </script>
