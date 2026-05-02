@@ -21,10 +21,11 @@ spring:
   cloud:
     gateway:
       routes:
+        # Точный путь /booking (список GET) не попадает под шаблон /booking/** в некоторых версиях Gateway
         - id: suitcase-booking
           uri: http://suitcase-booking-container:8081  # Внутренний адрес контейнера
           predicates:
-            - Path=/booking/**
+            - Path=/booking,/booking/**
 
         - id: suitcase-booking
           uri: http://suitcase-booking-container:8081  # Внутренний адрес контейнера
