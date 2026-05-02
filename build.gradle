@@ -38,22 +38,28 @@ dependencies {
 
 tasks.register('frontendNpmBuild', Exec) {
 	workingDir "$projectDir/frontend"
-	// lock-файл не обязателен: CI и Docker с Node выполнят install + vite
 	commandLine 'sh', '-c', 'npm install && npm run build'
 }
 
 tasks.register('copyFrontendDist', Copy) {
-	dependsOn frontendNpmBuild
+	dependsOn tasks.named('frontendNpmBuild')
+	dependsOn tasks.named('processResources')
 	from "$projectDir/frontend/dist"
-	into "$buildDir/resources/main/static"
+	into layout.buildDirectory.dir('resources/main/static')
 }
 
-tasks.named('processResources') {
-	dependsOn frontendNpmBuild
-	finalizedBy copyFrontendDist
+tasks.named('resolveMainClassName') {
+	dependsOn tasks.named('copyFrontendDist')
+}
+
+tasks.named('bootJar') {
+	dependsOn tasks.named('copyFrontendDist')
+}
+
+tasks.named('jar') {
+	dependsOn tasks.named('copyFrontendDist')
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
-
