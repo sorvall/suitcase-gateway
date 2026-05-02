@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Заказы — BikeBoxGo</title>
+    <style>
+        :root {
+            --primary-color: #FFCC00;
+            --secondary-color: #000000;
+            --light-bg: #f5f5f6;
+            --border-radius: 8px;
+            --success: #00B956;
+            --danger: #FF3333;
+            --muted: #7F8285;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--light-bg);
+            color: var(--secondary-color);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        .topbar {
+            background: var(--primary-color);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .topbar h1 { font-size: 1.25rem; font-weight: 700; }
+        .topbar-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        a.home-link {
+            color: var(--secondary-color);
+            font-weight: 500;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+        }
+        a.home-link:hover { border-bottom-color: var(--secondary-color); }
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 10px 18px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        button:hover:not(:disabled) { transform: translateY(-1px); }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-refresh {
+            background: var(--secondary-color);
+            color: var(--primary-color);
+        }
+        .btn-confirm { background: var(--success); color: #fff; }
+        .btn-cancel { background: var(--danger); color: #fff; }
+        .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .status-line { font-size: 14px; color: var(--muted); margin-bottom: 16px; min-height: 1.5em; }
+        .status-line.error { color: var(--danger); }
+        .loading { padding: 48px; text-align: center; color: var(--muted); }
+        .table-scroll { overflow-x: auto; background: #fff; border-radius: var(--border-radius); box-shadow: 0 1px 6px rgba(0,0,0,0.08); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e8e8e8;
+        }
+        th {
+            background: #fafafa;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        tr:last-child td { border-bottom: none; }
+        .mono { font-family: ui-monospace, monospace; font-size: 12px; word-break: break-all; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .st-PENDING { background: #fff3cd; }
+        .st-IN_USE { background: #cce5ff; }
+        .st-CONFIRMED { background: #d4edda; }
+        .st-CANCELLED { background: #f0f0f0; color: #555; }
+        .st-COMPLETED { background: #e2e3e5; }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .empty { padding: 48px; text-align: center; color: var(--muted); }
+    </style>
+</head>
+<body>
+<header class="topbar">
+    <h1>Управление заказами</h1>
+    <div class="topbar-actions">
+        <a class="home-link" href="/">← На главную</a>
+        <button type="button" class="btn-refresh" id="refreshBtn">Обновить список</button>
+    </div>
+</header>
+
+<main class="wrap">
+    <p class="status-line" id="statusLine"></p>
+    <div id="contentArea" class="loading">Загрузка…</div>
+</main>
+
+<script>
+(function () {
+    const statusLine = document.getElementById('statusLine');
+    const contentArea = document.getElementById('contentArea');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    const statusLabels = {
+        PENDING: 'Ожидает',
+        IN_USE: 'В использовании',
+        CONFIRMED: 'Подтверждён',
+        CANCELLED: 'Отменён',
+        COMPLETED: 'Завершён'
+    };
+
+    function statusLabel(s) {
+        return statusLabels[s] || s;
+    }
+
+    function setStatus(msg, isError) {
+        statusLine.textContent = msg || '';
+        statusLine.classList.toggle('error', !!isError);
+    }
+
+    function canConfirm(status) {
+        return status === 'PENDING';
+    }
+
+    function canCancel(status) {
+        return status !== 'CANCELLED' && status !== 'COMPLETED';
+    }
+
+    function renderTable(rows) {
+        if (!rows.length) {
+            contentArea.innerHTML = '<div class="empty">Нет заказов</div>';
+            return;
+        }
+
+        const thead = '<tr><th>ID брони</th><th>Чемодан</th><th>Начало</th><th>Окончание</th><th>Статус</th><th>Действия</th></tr>';
+        const body = rows.map(function (r) {
+            const id = r.id;
+            const badgeClass = 'status-badge st-' + (r.status || '').replace(/[^A-Z_]/g, '_');
+            const cDisabled = canConfirm(r.status) ? '' : 'disabled';
+            const xDisabled = canCancel(r.status) ? '' : 'disabled';
+            return '<tr data-id="' + id + '">' +
+                '<td class="mono" title="' + id + '">' + id.substring(0, 8) + '…</td>' +
+                '<td class="mono" title="' + (r.suitcaseId || '') + '">' + (r.suitcaseId ? r.suitcaseId.substring(0, 8) + '…' : '—') + '</td>' +
+                '<td>' + (r.startDate || '—') + '</td>' +
+                '<td>' + (r.endDate || '—') + '</td>' +
+                '<td><span class="' + badgeClass + '">' + statusLabel(r.status) + '</span><br><small class="mono">' + (r.status || '') + '</small></td>' +
+                '<td class="actions">' +
+                '<button type="button" class="btn-confirm" data-action="confirm" data-id="' + id + '" ' + cDisabled + '>Подтвердить</button>' +
+                '<button type="button" class="btn-cancel" data-action="cancel" data-id="' + id + '" ' + xDisabled + '>Отменить</button>' +
+                '</td></tr>';
+        }).join('');
+
+        contentArea.innerHTML = '<div class="table-scroll"><table><thead>' + thead + '</thead><tbody>' + body + '</tbody></table></div>';
+
+        contentArea.querySelectorAll('button[data-action]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var action = btn.getAttribute('data-action');
+                var bid = btn.getAttribute('data-id');
+                if (action === 'confirm') postAction(bid, 'confirm');
+                if (action === 'cancel') postAction(bid, 'cancel');
+            });
+        });
+    }
+
+    function loadOrders() {
+        setStatus('');
+        contentArea.innerHTML = '<div class="loading">Загрузка…</div>';
+        refreshBtn.disabled = true;
+
+        fetch('/booking')
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                if (!Array.isArray(data)) throw new Error('Ожидался массив');
+                renderTable(data);
+            })
+            .catch(function (e) {
+                setStatus('Не удалось загрузить заказы: ' + e.message, true);
+                contentArea.innerHTML = '<div class="empty">Ошибка загрузки</div>';
+            })
+            .finally(function () {
+                refreshBtn.disabled = false;
+            });
+    }
+
+    function postAction(id, kind) {
+        setStatus('Выполняется…');
+        var url = '/booking/' + id + '/' + (kind === 'confirm' ? 'confirm' : 'cancel');
+
+        fetch(url, { method: 'POST' })
+            .then(function (res) {
+                if (res.status === 404) throw new Error('Заказ не найден');
+                if (res.status === 409) throw new Error(kind === 'confirm'
+                    ? 'Нельзя подтвердить в этом статусе'
+                    : 'Нельзя отменить (например, уже завершён)');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.text();
+            })
+            .then(function (body) {
+                setStatus('Готово. Ответ: ' + (body || 'OK').trim());
+                loadOrders();
+            })
+            .catch(function (e) {
+                setStatus(e.message || 'Ошибка', true);
+            });
+    }
+
+    refreshBtn.addEventListener('click', loadOrders);
+    loadOrders();
+})();
+</script>
+</body>
+</html>
