@@ -71,8 +71,8 @@
             padding: 16px var(--pad-x) 0;
             display: flex;
             flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
+            align-items: stretch;
+            justify-content: flex-start;
             gap: 14px;
         }
         .filter-block {
@@ -99,6 +99,30 @@
             height: 20px;
             accent-color: var(--secondary-color);
             cursor: pointer;
+        }
+        .sort-block {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: var(--surface);
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .sort-block label { font-weight: 600; font-size: 14px; color: #374151; }
+        .sort-block select {
+            min-width: 280px;
+            max-width: 100%;
+            padding: 10px 14px;
+            font-size: 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+        }
+        @media (max-width: 600px) {
+            .sort-block select { min-width: 0; width: 100%; }
         }
         .count-badge {
             font-size: 13px;
@@ -239,6 +263,17 @@
         </label>
         <span class="count-badge" id="countBadge"></span>
     </div>
+    <div class="sort-block">
+        <label for="sortSelect">Сортировка</label>
+        <select id="sortSelect" aria-label="Сортировка списка заказов">
+            <option value="startDate:desc">Дата начала (сначала поздние)</option>
+            <option value="startDate:asc">Дата начала (сначала ранние)</option>
+            <option value="fullName:asc">ФИО (А → Я)</option>
+            <option value="fullName:desc">ФИО (Я → А)</option>
+            <option value="status:asc">Статус (по этапу: ожидание → завершён)</option>
+            <option value="status:desc">Статус (обратный порядок)</option>
+        </select>
+    </div>
 </div>
 
 <main class="main-inner">
@@ -253,8 +288,12 @@
     const refreshBtn = document.getElementById('refreshBtn');
     const filterPendingOnly = document.getElementById('filterPendingOnly');
     const countBadge = document.getElementById('countBadge');
+    const sortSelect = document.getElementById('sortSelect');
 
     let allOrders = [];
+
+    /** Порядок статусов для сортировки «по этапу» */
+    var STATUS_SORT_ORDER = { PENDING: 0, IN_USE: 1, CONFIRMED: 2, COMPLETED: 3, CANCELLED: 4 };
 
     const statusLabels = {
         PENDING: 'Ожидает',
@@ -293,6 +332,35 @@
     function getFilteredRows() {
         if (!filterPendingOnly.checked) return allOrders.slice();
         return allOrders.filter(function (r) { return r.status === 'PENDING'; });
+    }
+
+    function sortRows(rows) {
+        var parts = (sortSelect.value || 'startDate:desc').split(':');
+        var key = parts[0];
+        var dirMul = parts[1] === 'asc' ? 1 : -1;
+        var copy = rows.slice();
+        copy.sort(function (a, b) {
+            var cmp = 0;
+            if (key === 'startDate') {
+                var sa = a.startDate || '';
+                var sb = b.startDate || '';
+                cmp = sa < sb ? -1 : (sa > sb ? 1 : 0);
+            } else if (key === 'fullName') {
+                var fa = (a.fullName || '').trim().toLowerCase();
+                var fb = (b.fullName || '').trim().toLowerCase();
+                if (!fa && !fb) cmp = 0;
+                else if (!fa) cmp = 1;
+                else if (!fb) cmp = -1;
+                else cmp = fa.localeCompare(fb, 'ru');
+            } else if (key === 'status') {
+                var oa = STATUS_SORT_ORDER.hasOwnProperty(a.status) ? STATUS_SORT_ORDER[a.status] : 99;
+                var ob = STATUS_SORT_ORDER.hasOwnProperty(b.status) ? STATUS_SORT_ORDER[b.status] : 99;
+                cmp = oa - ob;
+                if (cmp === 0) cmp = String(a.status || '').localeCompare(String(b.status || ''));
+            }
+            return dirMul * cmp;
+        });
+        return copy;
     }
 
     function updateCountBadge(shown, total) {
@@ -382,7 +450,7 @@
     }
 
     function applyFilterAndRender() {
-        renderTable(getFilteredRows());
+        renderTable(sortRows(getFilteredRows()));
     }
 
     function loadOrders() {
@@ -435,6 +503,7 @@
 
     refreshBtn.addEventListener('click', loadOrders);
     filterPendingOnly.addEventListener('change', applyFilterAndRender);
+    sortSelect.addEventListener('change', applyFilterAndRender);
     loadOrders();
 })();
 </script>
