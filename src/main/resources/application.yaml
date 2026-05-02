@@ -9,6 +9,10 @@ server:
     enabled: true
 
 spring:
+  main:
+    # Gateway — только WebFlux; иначе при лишней зависимости на spring-boot-starter-web
+    # Boot выберет servlet и потянет WebSecurityConfiguration без jakarta.servlet в рантайме.
+    web-application-type: reactive
   application:
     name: suitcase-gateway
   boot:
