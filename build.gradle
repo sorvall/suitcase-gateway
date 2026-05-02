@@ -24,13 +24,33 @@ dependencyManagement {
 }
 
 dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation 'io.micrometer:micrometer-registry-prometheus'
-	implementation("de.codecentric:spring-boot-admin-starter-client:3.2.0")
+	implementation("de.codecentric:spring-boot-admin-starter-client:3.2.0") {
+		exclude group: "org.springframework.boot", module: "spring-boot-starter-web"
+	}
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.register('frontendNpmBuild', Exec) {
+	workingDir "$projectDir/frontend"
+	// lock-файл не обязателен: CI и Docker с Node выполнят install + vite
+	commandLine 'sh', '-c', 'npm install && npm run build'
+}
+
+tasks.register('copyFrontendDist', Copy) {
+	dependsOn frontendNpmBuild
+	from "$projectDir/frontend/dist"
+	into "$buildDir/resources/main/static"
+}
+
+tasks.named('processResources') {
+	dependsOn frontendNpmBuild
+	finalizedBy copyFrontendDist
 }
 
 tasks.named('test') {

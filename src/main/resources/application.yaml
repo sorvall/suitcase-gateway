@@ -39,12 +39,6 @@ spring:
           predicates:
             - Path=/dashboard/**
 
-  thymeleaf:
-    prefix: classpath:/templates/
-    suffix: .html
-    mode: HTML
-    encoding: UTF-8
-
 management:
   endpoints:
     web:

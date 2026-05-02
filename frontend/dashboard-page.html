@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -597,6 +597,9 @@
                 </svg>
                 Обновить
             </button>
+            <form action="/logout" method="post" style="display:inline">
+                <button type="submit" class="btn secondary">Выйти</button>
+            </form>
         </div>
     </div>
 
@@ -652,7 +655,7 @@
     </div>
 </div>
 
-<script th:inline="javascript">
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         // Текущая дата и данные
         let currentDate = new Date();
