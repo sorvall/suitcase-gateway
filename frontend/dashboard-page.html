@@ -180,6 +180,8 @@
 
         .chart-container {
             width: 100%;
+            min-width: 280px;
+            min-height: min(420px, 50vh);
             margin-top: 16px;
             border-radius: 12px;
             background-color: var(--yandex-white);
@@ -190,7 +192,10 @@
 
         .chart {
             width: 100%;
+            min-height: 380px;
+            display: block;
             padding: 10px;
+            box-sizing: border-box;
         }
 
         .bar {
@@ -730,7 +735,12 @@
             loadingIndicator.classList.toggle('active', show);
         }
 
-        /** На десктопе при первом кадре после fetch иногда clientWidth === 0 — шкала D3 ломается. */
+        /** Десктоп иногда отдаёт 0 до завершения layout; visualViewport учитывает масштаб/панели. */
+        function viewportWidth() {
+            const vv = window.visualViewport;
+            return (vv && vv.width) ? vv.width : (window.innerWidth || document.documentElement.clientWidth || 800);
+        }
+
         function measureChartWidth() {
             let w = chartContainer.clientWidth;
             if (!w) {
@@ -745,15 +755,49 @@
                 w = (dash.clientWidth || dash.getBoundingClientRect().width) - 32;
             }
             if (!w) {
-                w = Math.min(window.innerWidth || 800, 1200) - 64;
+                w = Math.min(viewportWidth(), 1200) - 64;
             }
             return Math.max(280, Math.floor(w));
         }
 
-        /** После layout: спиннер снят → два кадра — размеры контейнера стабильны. */
+        /** Реальная ширина DOM (без fallback) — для решения «ещё не разложилось». */
+        function hasRenderableChartBox() {
+            const r = chartContainer.getBoundingClientRect();
+            return r.width > 32 && r.height > 32;
+        }
+
+        /**
+         * Двойной rAF + при необходимости несколько попыток с интервалом,
+         * пока контейнер не получит ненулевой bbox (десктоп / масштаб / шрифты).
+         */
         function scheduleRenderGantt() {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => renderGanttChart());
+            let attempt = 0;
+            const maxAttempts = 30;
+            const intervalMs = 60;
+
+                function tick() {
+                attempt++;
+                const innerW = chartContainer.clientWidth || chartContainer.getBoundingClientRect().width;
+                const ok = hasRenderableChartBox() && innerW > 40;
+
+                if (ok || attempt >= maxAttempts) {
+                    renderGanttChart();
+                    if (currentData && currentData.length > 0) {
+                        setTimeout(function verifySvg() {
+                            var svg = document.querySelector('#gantt-chart svg');
+                            var rw = svg ? svg.getBoundingClientRect().width : 0;
+                            if (!rw) {
+                                renderGanttChart();
+                            }
+                        }, 120);
+                    }
+                    return;
+                }
+                setTimeout(tick, intervalMs);
+            }
+
+            requestAnimationFrame(function() {
+                requestAnimationFrame(tick);
             });
         }
 
