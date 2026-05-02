@@ -132,7 +132,7 @@
         }
         table {
             width: 100%;
-            min-width: 720px;
+            min-width: 980px;
             border-collapse: collapse;
             font-size: 14px;
         }
@@ -317,6 +317,11 @@
             return;
         }
 
+        function cellText(val) {
+            if (val == null || val === '') return '—';
+            return escapeHtml(val);
+        }
+
         function rowDesktop(r) {
             var id = r.id;
             var badgeClass = 'status-badge st-' + (r.status || '').replace(/[^A-Z_]/g, '_');
@@ -325,6 +330,8 @@
             return '<tr data-id="' + escapeHtml(id) + '">' +
                 '<td class="mono">' + escapeHtml(id) + '</td>' +
                 '<td class="mono">' + (r.suitcaseId ? escapeHtml(r.suitcaseId) : '—') + '</td>' +
+                '<td>' + cellText(r.fullName) + '</td>' +
+                '<td class="mono">' + cellText(r.phone) + '</td>' +
                 '<td>' + escapeHtml(r.startDate || '—') + '</td>' +
                 '<td>' + escapeHtml(r.endDate || '—') + '</td>' +
                 '<td><span class="' + badgeClass + '">' + escapeHtml(statusLabel(r.status)) + '</span><br><small class="mono">' + escapeHtml(r.status || '') + '</small></td>' +
@@ -345,6 +352,8 @@
                 '</div>' +
                 '<div class="order-card-row"><span>Бронь</span><span class="mono">' + escapeHtml(id) + '</span></div>' +
                 '<div class="order-card-row"><span>Чемодан</span><span class="mono">' + escapeHtml(r.suitcaseId || '—') + '</span></div>' +
+                '<div class="order-card-row"><span>ФИО</span><span>' + cellText(r.fullName) + '</span></div>' +
+                '<div class="order-card-row"><span>Телефон</span><span class="mono">' + cellText(r.phone) + '</span></div>' +
                 '<div class="order-card-row"><span>Период</span><span>' + escapeHtml(r.startDate || '—') + ' — ' + escapeHtml(r.endDate || '—') + '</span></div>' +
                 '<div class="order-card-row"><span>Статус API</span><span class="mono">' + escapeHtml(r.status || '') + '</span></div>' +
                 '<div class="order-card-actions">' +
@@ -353,7 +362,7 @@
                 '</div></article>';
         }
 
-        var thead = '<tr><th>ID брони</th><th>Чемодан</th><th>Начало</th><th>Окончание</th><th>Статус</th><th>Действия</th></tr>';
+        var thead = '<tr><th>ID брони</th><th>Чемодан</th><th>ФИО</th><th>Телефон</th><th>Начало</th><th>Окончание</th><th>Статус</th><th>Действия</th></tr>';
         var desktopBody = rows.map(rowDesktop).join('');
         var mobileBody = rows.map(rowMobile).join('');
 
