@@ -730,6 +730,33 @@
             loadingIndicator.classList.toggle('active', show);
         }
 
+        /** На десктопе при первом кадре после fetch иногда clientWidth === 0 — шкала D3 ломается. */
+        function measureChartWidth() {
+            let w = chartContainer.clientWidth;
+            if (!w) {
+                w = chartContainer.getBoundingClientRect().width;
+            }
+            const wrap = chartContainer.closest('.chart-container');
+            if (!w && wrap) {
+                w = wrap.clientWidth || wrap.getBoundingClientRect().width;
+            }
+            const dash = document.querySelector('.dashboard');
+            if (!w && dash) {
+                w = (dash.clientWidth || dash.getBoundingClientRect().width) - 32;
+            }
+            if (!w) {
+                w = Math.min(window.innerWidth || 800, 1200) - 64;
+            }
+            return Math.max(280, Math.floor(w));
+        }
+
+        /** После layout: спиннер снят → два кадра — размеры контейнера стабильны. */
+        function scheduleRenderGantt() {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => renderGanttChart());
+            });
+        }
+
         // Загрузка данных
         function loadData() {
             setLoading(true);
@@ -748,7 +775,8 @@
                 })
                 .then(data => {
                     currentData = data;
-                    renderGanttChart();
+                    setLoading(false);
+                    scheduleRenderGantt();
                 })
                 .catch(error => {
                     console.error('Ошибка:', error);
@@ -758,8 +786,6 @@
                                 <div>Ошибка загрузки данных</div>
                             </div>
                         `;
-                })
-                .finally(() => {
                     setLoading(false);
                 });
         }
@@ -803,8 +829,8 @@
 
             // Настройки диаграммы
             const margin = {top: 30, right: 30, bottom: 50, left: 120};
-            const containerWidth = chartContainer.clientWidth;
-            const width = containerWidth - margin.left - margin.right;
+            const containerWidth = measureChartWidth();
+            const width = Math.max(120, containerWidth - margin.left - margin.right);
             const height = Math.max(400, currentData.length * 40) - margin.top - margin.bottom;
 
             // Создаем SVG
@@ -995,9 +1021,18 @@
         // Адаптация к изменению размера окна
         window.addEventListener('resize', function() {
             if (currentData && currentData.length > 0) {
-                renderGanttChart();
+                scheduleRenderGantt();
             }
         });
+
+        const chartWrap = chartContainer.closest('.chart-container');
+        if (chartWrap && typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(function() {
+                if (currentData && currentData.length > 0) {
+                    scheduleRenderGantt();
+                }
+            }).observe(chartWrap);
+        }
     });
 </script>
 </body>
