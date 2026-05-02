@@ -1,59 +1,54 @@
 package ru.sorokin.gateway.config;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 
 @Configuration
-@EnableWebSecurity
+@EnableWebFluxSecurity
 public class SecurityConfig {
 
     public static final String ADMIN_USER = "admin";
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/error").permitAll()
-                        .requestMatchers("/", "/css/**", "/images/**", "/js/**", "/static/**").permitAll()
-                        .requestMatchers("/favicon.ico", "/robots.txt", "/sitemap.xml").permitAll()
-                        .requestMatchers("/yandex_*").permitAll()
-                        .requestMatchers("/booking/**", "/availability/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/statistics/**").permitAll()
-                        .requestMatchers("/orders", "/dashboard-page").authenticated()
-                        .requestMatchers("/dashboard", "/dashboard/**").authenticated()
-                        .anyRequest().permitAll()
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers("/login", "/error").permitAll()
+                        .pathMatchers("/", "/css/**", "/images/**", "/js/**", "/static/**").permitAll()
+                        .pathMatchers("/favicon.ico", "/robots.txt", "/sitemap.xml").permitAll()
+                        .pathMatchers("/yandex_*").permitAll()
+                        .pathMatchers("/booking/**", "/availability/**").permitAll()
+                        .pathMatchers("/actuator/**").permitAll()
+                        .pathMatchers("/statistics/**").permitAll()
+                        .pathMatchers("/orders", "/dashboard-page").authenticated()
+                        .pathMatchers("/dashboard", "/dashboard/**").authenticated()
+                        .anyExchange().permitAll()
                 )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/")
-                        .permitAll()
-                )
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/booking/**", "/availability/**", "/dashboard/**")
-                );
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(form -> form.loginPage("/login"))
+                .logout(logout -> logout.logoutSuccessUrl("/"))
+                .csrf(ServerHttpSecurity.CsrfSpec::disable);
         return http.build();
     }
 
     @Bean
-    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder encoder) {
+    public MapReactiveUserDetailsService userDetailsService(PasswordEncoder encoder) {
         UserDetails admin = User.builder()
                 .username(ADMIN_USER)
                 .password(encoder.encode("5564"))
                 .roles("ADMIN")
                 .build();
-        return new InMemoryUserDetailsManager(admin);
+        return new MapReactiveUserDetailsService(List.of(admin));
     }
 
     @Bean
