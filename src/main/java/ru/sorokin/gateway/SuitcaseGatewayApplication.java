@@ -14,7 +14,6 @@ import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServic
 public class SuitcaseGatewayApplication {
     public static void main(String[] args) {
         SpringApplication.run(SuitcaseGatewayApplication.class, args);
-        System.out.println("UP!!!");
     }
 
 }
