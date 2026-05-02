@@ -31,7 +31,6 @@ public class SecurityConfig {
                         .pathMatchers("/yandex_*").permitAll()
                         .pathMatchers("/booking/**", "/availability/**").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers("/statistics/**").permitAll()
                         .pathMatchers("/orders", "/dashboard-page").authenticated()
                         .pathMatchers("/dashboard", "/dashboard/**").permitAll()
                         .anyExchange().permitAll()
