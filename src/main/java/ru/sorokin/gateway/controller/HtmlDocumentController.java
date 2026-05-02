@@ -3,15 +3,16 @@ package ru.sorokin.gateway.controller;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import reactor.core.publisher.Mono;
 
 /**
  * Раздаёт HTML из classpath:/static/ (собирается Vite в {@code frontend/dist}).
+ * {@code @RestController} обязателен: иначе WebFlux пытается резолвить {@link Resource} как View (имя '').
  */
-@Controller
+@RestController
 public class HtmlDocumentController {
 
     private static Mono<Resource> html(String name) {
