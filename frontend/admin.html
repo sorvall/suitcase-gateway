@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Админка — BikeBoxGo</title>
+    <!-- PWA: установка на экран «Домой» и push-уведомления о новых заказах -->
+    <link rel="manifest" href="/pwa/manifest.json">
+    <meta name="theme-color" content="#FFDB4D">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BikeBoxGo">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png">
+    <!-- Локальная копия: на части ПК CDN d3js.org блокируется → график не строился -->
+    <script src="/vendor/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --yandex-yellow: #FFDB4D;
+            --yandex-yellow-light: #FFE570;
+            --yandex-yellow-dark: #FCC521;
+            --yandex-black: #000000;
+            --yandex-gray: #F2F2F2;
+            --yandex-light-gray: #FAFAFA;
+            --yandex-dark-gray: #7F8285;
+            --yandex-red: #FF3333;
+            --yandex-white: #FFFFFF;
+            --yandex-blue: #0066FF;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'YSText', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--yandex-light-gray);
+            color: var(--yandex-black);
+            line-height: 1.5;
+            padding: 16px;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--yandex-white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .dashboard-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            background: linear-gradient(135deg, var(--yandex-yellow), var(--yandex-yellow-light));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--yandex-red), var(--yandex-yellow-dark));
+            opacity: 0.7;
+        }
+
+        .dashboard-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--yandex-black);
+            position: relative;
+            text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .month-navigation {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--yandex-white);
+            border-radius: 10px;
+            padding: 6px;
+            border: 1px solid var(--yandex-gray);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .month-title {
+            font-size: 15px;
+            font-weight: 500;
+            min-width: 140px;
+            text-align: center;
+            color: var(--yandex-black);
+            padding: 0 10px;
+        }
+
+        .btn {
+            background-color: var(--yandex-black);
+            color: var(--yandex-yellow);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                    to bottom right,
+                    rgba(255, 255, 255, 0.3),
+                    rgba(255, 255, 255, 0)
+            );
+            transform: rotate(30deg);
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover::after {
+            transform: translateX(100%) rotate(30deg);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.secondary {
+            background-color: var(--yandex-white);
+            color: var(--yandex-black);
+            border: 1px solid var(--yandex-gray);
+        }
+
+        .btn.secondary:hover {
+            background-color: var(--yandex-gray);
+        }
+
+        .btn svg {
+            width: 16px;
+            height: 16px;
+            transition: var(--transition);
+        }
+
+        .btn:hover svg {
+            transform: scale(1.1);
+        }
+
+        .dashboard-content {
+            padding: 24px;
+            position: relative;
+            background-color: var(--yandex-white);
+        }
+
+        .chart-container {
+            width: 100%;
+            min-width: 280px;
+            min-height: min(260px, 40vh);
+            margin-top: 16px;
+            border-radius: 12px;
+            background-color: var(--yandex-white);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--yandex-gray);
+            overflow: hidden;
+        }
+
+        .chart {
+            width: 100%;
+            min-height: 240px;
+            display: block;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .bar {
+            fill: var(--yandex-yellow-dark);
+            rx: 6;
+            ry: 6;
+            transition: var(--transition);
+            stroke: var(--yandex-yellow);
+            stroke-width: 1;
+        }
+
+        .bar:hover {
+            fill: var(--yandex-yellow);
+            stroke: var(--yandex-yellow-dark);
+            stroke-width: 2;
+            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.15));
+            transform: translateY(-2px);
+        }
+
+        .bar.past {
+            fill: var(--yandex-dark-gray);
+            stroke: var(--yandex-gray);
+        }
+
+        .bar.upcoming {
+            fill: var(--yandex-blue);
+            stroke: #0044CC;
+            opacity: 0.7;
+        }
+
+        .bar.active {
+            fill: var(--yandex-yellow-dark);
+            stroke: var(--yandex-yellow);
+        }
+
+        .delivery-icon {
+            font-size: 14px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+
+        .current-day-line {
+            stroke: var(--yandex-red);
+            stroke-width: 2;
+            stroke-dasharray: 4, 4;
+            filter: drop-shadow(0 0 4px rgba(255, 51, 51, 0.4));
+        }
+
+        .axis text {
+            font-size: 12px;
+            fill: var(--yandex-dark-gray);
+            font-family: 'YSText', sans-serif;
+        }
+
+        .axis line {
+            stroke: var(--yandex-gray);
+            stroke-dasharray: 2, 2;
+        }
+
+        .axis path {
+            stroke: var(--yandex-gray);
+        }
+
+        .grid line {
+            stroke: var(--yandex-gray);
+            stroke-dasharray: 2, 2;
+            opacity: 0.7;
+        }
+
+        .grid path {
+            stroke-width: 0;
+        }
+
+        .tooltip {
+            position: absolute;
+            padding: 14px;
+            background: rgba(0, 0, 0, 0.92);
+            color: white;
+            border-radius: 10px;
+            pointer-events: none;
+            font-size: 14px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            max-width: 300px;
+            z-index: 100;
+            font-family: 'YSText', sans-serif;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: var(--transition);
+        }
+
+        .tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tooltip-title {
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--yandex-yellow);
+            font-size: 15px;
+            position: relative;
+            padding-bottom: 6px;
+        }
+
+        .tooltip-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--yandex-yellow), transparent);
+        }
+
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .tooltip-label {
+            color: var(--yandex-gray);
+            margin-right: 12px;
+            font-size: 13px;
+        }
+
+        .tooltip-value {
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 50;
+            backdrop-filter: blur(4px);
+            border-radius: 0 0 16px 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .loading.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 219, 77, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--yandex-yellow);
+            animation: spin 1s linear infinite;
+            position: relative;
+        }
+
+        .spinner::after {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 4px solid transparent;
+            border-radius: 50%;
+            border-top-color: var(--yandex-red);
+            animation: spin 1.5s linear infinite reverse;
+            opacity: 0.7;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 15px;
+            color: var(--yandex-dark-gray);
+            font-weight: 500;
+            text-shadow: 0 1px 1px white;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--yandex-dark-gray);
+            font-size: 16px;
+        }
+
+        .no-data-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: var(--yandex-gray);
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background-color: var(--yandex-white);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            padding: 24px;
+            position: relative;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--yandex-black);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--yandex-dark-gray);
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--yandex-black);
+        }
+
+        .modal-content {
+            margin-bottom: 24px;
+        }
+
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--yandex-gray);
+        }
+
+        .modal-label {
+            color: var(--yandex-dark-gray);
+            font-size: 14px;
+        }
+
+        .modal-value {
+            font-weight: 500;
+            text-align: right;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            border: none;
+        }
+
+        .modal-btn.primary {
+            background-color: var(--yandex-yellow);
+            color: var(--yandex-black);
+        }
+
+        .modal-btn.primary:hover {
+            background-color: var(--yandex-yellow-light);
+        }
+
+        .modal-btn.secondary {
+            background-color: var(--yandex-gray);
+            color: var(--yandex-black);
+        }
+
+        .modal-btn.secondary:hover {
+            background-color: #e6e6e6;
+        }
+
+        /* Заголовок блока внутри карточки */
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        a.btn {
+            text-decoration: none;
+        }
+
+        /* Push-уведомления о заказах */
+        .push-bar {
+            margin: 20px 24px 0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background-color: var(--yandex-light-gray);
+            border: 1px solid var(--yandex-gray);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+        }
+
+        .push-text { font-size: 14px; }
+        .push-text strong { display: block; font-size: 15px; }
+        .push-hint { color: var(--yandex-dark-gray); font-size: 13px; }
+        .push-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .push-actions .btn { padding: 8px 14px; font-size: 13px; }
+        .push-actions .btn[hidden] { display: none; }
+
+        @media (max-width: 768px) {
+            .push-bar { margin: 16px 16px 0; }
+        }
+
+        /* Состояние сервисов */
+        .services-section {
+            padding: 20px 24px 0;
+        }
+
+        .services-meta {
+            font-size: 13px;
+            color: var(--yandex-dark-gray);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .service-card {
+            border: 1px solid var(--yandex-gray);
+            border-left: 4px solid var(--yandex-dark-gray);
+            border-radius: 12px;
+            padding: 12px 14px;
+            background-color: var(--yandex-white);
+        }
+
+        .service-card.st-up { border-left-color: #00B956; }
+        .service-card.st-warn { border-left-color: var(--yandex-yellow-dark); }
+        .service-card.st-down { border-left-color: var(--yandex-red); }
+
+        .service-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .service-name { font-weight: 700; font-size: 15px; }
+        .service-latency { font-size: 12px; color: var(--yandex-dark-gray); font-variant-numeric: tabular-nums; }
+        .service-state { font-size: 13px; font-weight: 600; margin-top: 2px; }
+        .st-up .service-state { color: #00873E; }
+        .st-warn .service-state { color: #8a6d00; }
+        .st-down .service-state { color: var(--yandex-red); }
+
+        .service-components {
+            list-style: none;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
+        }
+
+        .service-components li {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex: none;
+            background-color: var(--yandex-dark-gray);
+        }
+
+        .dot.st-up { background-color: #00B956; }
+        .dot.st-warn { background-color: var(--yandex-yellow-dark); }
+        .dot.st-down { background-color: var(--yandex-red); }
+        .component-detail { color: var(--yandex-dark-gray); word-break: break-word; }
+        .service-error { margin-top: 6px; font-size: 12px; color: var(--yandex-red); word-break: break-word; }
+
+        /* Статистика за месяц */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .stat-card {
+            background-color: var(--yandex-light-gray);
+            border: 1px solid var(--yandex-gray);
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.2;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--yandex-dark-gray);
+            margin-top: 4px;
+        }
+
+        /* Блок управления заказами */
+        .orders-section {
+            margin-top: 16px;
+        }
+
+        .orders-section .dashboard-content {
+            padding-top: 16px;
+        }
+
+        .orders-section .section-head {
+            padding: 20px 24px 0;
+        }
+
+        .count-badge {
+            font-size: 13px;
+            color: var(--yandex-dark-gray);
+        }
+
+        .count-badge strong { color: var(--yandex-black); }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px 20px;
+            margin-bottom: 12px;
+        }
+
+        .toolbar label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toolbar input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--yandex-black);
+        }
+
+        .toolbar select {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: var(--yandex-white);
+            max-width: 100%;
+        }
+
+        .status-line { font-size: 14px; color: var(--yandex-dark-gray); margin-bottom: 12px; min-height: 1.4em; }
+        .status-line.error { color: var(--yandex-red); font-weight: 500; }
+        .orders-placeholder { padding: 40px 16px; text-align: center; color: var(--yandex-dark-gray); font-size: 15px; }
+
+        .orders-section .order-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .orders-section .order-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .orders-section .btn-confirm { background: #00B956; }
+        .orders-section .btn-cancel { background: var(--yandex-red); }
+
+        .table-scroll {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--yandex-gray);
+            border-radius: 12px;
+        }
+
+        .orders-table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .orders-table th, .orders-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid #ececec;
+        }
+
+        .orders-table th {
+            background: var(--yandex-light-gray);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #374151;
+            white-space: nowrap;
+        }
+
+        .orders-table tbody tr:hover { background: #fafafa; }
+        .orders-table tr:last-child td { border-bottom: none; }
+        .mono { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 12px; word-break: break-all; }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .st-PENDING { background: #fff3cd; color: #856404; }
+        .st-IN_USE { background: #cce5ff; color: #004085; }
+        .st-CONFIRMED { background: #d4edda; color: #155724; }
+        .st-CANCELLED { background: #e9ecef; color: #555; }
+        .st-COMPLETED { background: #dee2e6; color: #333; }
+
+        .orders-mobile { display: none; flex-direction: column; gap: 12px; }
+
+        .order-card {
+            border: 1px solid var(--yandex-gray);
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .order-card-header { margin-bottom: 10px; }
+
+        .order-card-row {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 8px 12px;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .order-card-row span:first-child {
+            color: var(--yandex-dark-gray);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .order-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+
+        .order-card-actions .order-btn { flex: 1; }
+
+        @media (max-width: 900px) {
+            .orders-desktop { display: none; }
+            .orders-mobile { display: flex; }
+        }
+
+        @media (max-width: 768px) {
+            .orders-section .section-head,
+            .services-section {
+                padding: 16px 16px 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 16px;
+            }
+
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .month-navigation {
+                width: 100%;
+            }
+
+            .month-title {
+                flex-grow: 1;
+                font-size: 14px;
+            }
+
+            .btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+
+            .dashboard-content {
+                padding: 16px;
+            }
+
+            .modal {
+                width: 95%;
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+            }
+
+            .dashboard-title {
+                font-size: 18px;
+            }
+
+            .btn {
+                padding: 8px 12px;
+            }
+
+            .modal-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">BikeBoxGo — админка</h1>
+        <div class="controls">
+            <a href="/" class="btn secondary">На сайт</a>
+            <button id="refreshBtn" class="btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Обновить
+            </button>
+            <form action="/logout" method="post" style="display:inline">
+                <button type="submit" class="btn secondary">Выйти</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="push-bar" id="pushBar">
+        <div class="push-text">
+            <strong>🔔 Уведомления о новых заказах</strong>
+            <span class="push-hint" id="pushHint">Проверка…</span>
+        </div>
+        <div class="push-actions">
+            <button type="button" class="btn" id="pushEnableBtn" hidden>Включить</button>
+            <button type="button" class="btn secondary" id="pushTestBtn" hidden>Тест</button>
+            <button type="button" class="btn secondary" id="pushDisableBtn" hidden>Выключить</button>
+        </div>
+    </div>
+
+    <div class="services-section">
+        <div class="section-head">
+            <h2 class="section-title">Состояние сервисов</h2>
+            <span class="services-meta" id="servicesMeta">Проверка…</span>
+        </div>
+        <div class="services-grid" id="servicesGrid"></div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="section-head">
+            <h2 class="section-title">График бронирования</h2>
+            <div class="month-navigation">
+                <button id="prevMonthBtn" class="btn secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </button>
+                <div class="month-title" id="currentMonth">Май 2026</div>
+                <button id="nextMonthBtn" class="btn secondary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Загрузка данных...</div>
+        </div>
+
+        <div class="chart-container">
+            <div id="gantt-chart" class="chart"></div>
+        </div>
+
+        <div class="stats-grid" aria-label="Статистика за месяц">
+            <div class="stat-card">
+                <div class="stat-value" id="statRentals">—</div>
+                <div class="stat-label">Аренд в месяце</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statDays">—</div>
+                <div class="stat-label">Дней аренды (все чемоданы)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statLoad">—</div>
+                <div class="stat-label" id="statLoadLabel">Загрузка парка</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statDelivery">—</div>
+                <div class="stat-label">С доставкой</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="dashboard orders-section">
+    <div class="section-head">
+        <h2 class="section-title">Управление заказами</h2>
+        <span class="count-badge" id="countBadge"></span>
+    </div>
+    <div class="dashboard-content">
+        <div class="toolbar">
+            <label>
+                <input type="checkbox" id="filterPendingOnly">
+                <span>Только «Ожидает»</span>
+            </label>
+            <label>
+                <span>Сортировка</span>
+                <select id="sortSelect" aria-label="Сортировка списка заказов">
+                    <option value="startDate:desc">Дата начала (сначала поздние)</option>
+                    <option value="startDate:asc">Дата начала (сначала ранние)</option>
+                    <option value="fullName:asc">ФИО (А → Я)</option>
+                    <option value="fullName:desc">ФИО (Я → А)</option>
+                    <option value="status:asc">Статус (ожидание → завершён)</option>
+                    <option value="status:desc">Статус (обратный порядок)</option>
+                </select>
+            </label>
+        </div>
+        <p class="status-line" id="statusLine"></p>
+        <div id="ordersArea" class="orders-placeholder">Загрузка…</div>
+    </div>
+</section>
+
+<!-- Modal Window -->
+<div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 class="modal-title">Детали бронирования</h2>
+            <button id="modalClose" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-content">
+            <div class="modal-row">
+                <span class="modal-label">Номер чемодана:</span>
+                <span class="modal-value" id="modalSerial">-</span>
+            </div>
+            <div class="modal-row">
+                <span class="modal-label">Клиент:</span>
+                <span class="modal-value" id="modalName">-</span>
+            </div>
+            <div class="modal-row">
+                <span class="modal-label">Телефон:</span>
+                <span class="modal-value" id="modalPhone">-</span>
+            </div>
+            <div class="modal-row">
+                <span class="modal-label">Период:</span>
+                <span class="modal-value" id="modalPeriod">-</span>
+            </div>
+            <div class="modal-row">
+                <span class="modal-label">Доставка:</span>
+                <span class="modal-value" id="modalDelivery">-</span>
+            </div>
+            <div class="modal-row">
+                <span class="modal-label">Статус:</span>
+                <span class="modal-value" id="modalStatus">-</span>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button id="callBtn" class="modal-btn primary">Позвонить</button>
+            <button id="closeModalBtn" class="modal-btn secondary">Закрыть</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Текущая дата и данные
+        let currentDate = new Date();
+        let currentData = [];
+        let currentModalData = null;
+
+        // Элементы управления
+        const prevMonthBtn = document.getElementById('prevMonthBtn');
+        const nextMonthBtn = document.getElementById('nextMonthBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const currentMonthEl = document.getElementById('currentMonth');
+        const loadingIndicator = document.getElementById('loading');
+        const chartContainer = document.getElementById('gantt-chart');
+        const tooltip = d3.select("body").append("div").attr("class", "tooltip");
+
+        // Modal elements
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalClose = document.getElementById('modalClose');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const callBtn = document.getElementById('callBtn');
+        const modalSerial = document.getElementById('modalSerial');
+        const modalName = document.getElementById('modalName');
+        const modalPhone = document.getElementById('modalPhone');
+        const modalPeriod = document.getElementById('modalPeriod');
+        const modalDelivery = document.getElementById('modalDelivery');
+        const modalStatus = document.getElementById('modalStatus');
+
+        // Modal functions
+        function openModal(data) {
+            currentModalData = data;
+            modalSerial.textContent = data.serial;
+            modalName.textContent = data.name;
+            modalPhone.textContent = data.phone;
+            modalPeriod.textContent = `${data.start} — ${data.end}`;
+            modalDelivery.textContent = data.delivery ? 'Да 🚚' : 'Нет';
+            modalStatus.textContent = data.status;
+            modalOverlay.classList.add('active');
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            currentModalData = null;
+        }
+
+        function makePhoneCall() {
+            if (currentModalData && currentModalData.phone) {
+                const phoneNumber = currentModalData.phone.replace(/[^\d+]/g, '');
+                window.open(`tel:${phoneNumber}`, '_blank');
+            }
+        }
+
+        // Event listeners for modal
+        modalClose.addEventListener('click', closeModal);
+        closeModalBtn.addEventListener('click', closeModal);
+        callBtn.addEventListener('click', makePhoneCall);
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                closeModal();
+            }
+        });
+
+        // Обновляем отображение текущего месяца
+        function updateMonthDisplay() {
+            currentMonthEl.textContent = currentDate.toLocaleDateString('ru-RU', {
+                month: 'long',
+                year: 'numeric'
+            }).replace(/^./, l => l.toUpperCase());
+        }
+
+        // Показать/скрыть загрузку
+        function setLoading(show) {
+            loadingIndicator.classList.toggle('active', show);
+        }
+
+        /** Десктоп иногда отдаёт 0 до завершения layout; visualViewport учитывает масштаб/панели. */
+        function viewportWidth() {
+            const vv = window.visualViewport;
+            return (vv && vv.width) ? vv.width : (window.innerWidth || document.documentElement.clientWidth || 800);
+        }
+
+        function measureChartWidth() {
+            let w = chartContainer.clientWidth;
+            if (!w) {
+                w = chartContainer.getBoundingClientRect().width;
+            }
+            const wrap = chartContainer.closest('.chart-container');
+            if (!w && wrap) {
+                w = wrap.clientWidth || wrap.getBoundingClientRect().width;
+            }
+            const dash = document.querySelector('.dashboard');
+            if (!w && dash) {
+                w = (dash.clientWidth || dash.getBoundingClientRect().width) - 32;
+            }
+            if (!w) {
+                w = Math.min(viewportWidth(), 1200) - 64;
+            }
+            return Math.max(280, Math.floor(w));
+        }
+
+        /** Реальная ширина DOM (без fallback) — для решения «ещё не разложилось». */
+        function hasRenderableChartBox() {
+            const r = chartContainer.getBoundingClientRect();
+            return r.width > 32 && r.height > 32;
+        }
+
+        /**
+         * Двойной rAF + при необходимости несколько попыток с интервалом,
+         * пока контейнер не получит ненулевой bbox (десктоп / масштаб / шрифты).
+         */
+        function scheduleRenderGantt() {
+            let attempt = 0;
+            const maxAttempts = 30;
+            const intervalMs = 60;
+
+                function tick() {
+                attempt++;
+                const innerW = chartContainer.clientWidth || chartContainer.getBoundingClientRect().width;
+                const ok = hasRenderableChartBox() && innerW > 40;
+
+                if (ok || attempt >= maxAttempts) {
+                    renderGanttChart();
+                    if (currentData && currentData.length > 0) {
+                        setTimeout(function verifySvg() {
+                            var svg = document.querySelector('#gantt-chart svg');
+                            var rw = svg ? svg.getBoundingClientRect().width : 0;
+                            if (!rw) {
+                                renderGanttChart();
+                            }
+                        }, 120);
+                    }
+                    return;
+                }
+                setTimeout(tick, intervalMs);
+            }
+
+            requestAnimationFrame(function() {
+                requestAnimationFrame(tick);
+            });
+        }
+
+        function showChartLoadError(message) {
+            chartContainer.innerHTML =
+                '<div class="no-data"><div class="no-data-icon">📊</div><div>' +
+                (message || 'Ошибка загрузки данных') +
+                '</div><div style="margin-top:12px;font-size:13px;color:#7F8285;">Если на другом компьютере всё работает — проверьте блокировщики, VPN и режим «строгий» для cookie для этого сайта.</div></div>';
+        }
+
+        /** Несколько попыток: нестабильная сеть / краткий сбой шлюза. */
+        function fetchDashboardJson(url, attemptsLeft) {
+            return fetch(url, { credentials: 'same-origin', cache: 'no-store' })
+                .then(function(response) {
+                    if (response.status === 401) {
+                        // Сессия истекла: перезагрузка отправит на /login и после входа вернёт сюда
+                        window.location.reload();
+                        return new Promise(function() {});
+                    }
+                    return response.text().then(function(text) {
+                        if (!response.ok) {
+                            throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+                        }
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            throw new Error('Ответ не JSON (часто бывает при ошибке прокси): ' + text.substring(0, 100));
+                        }
+                    });
+                })
+                .catch(function(err) {
+                    if (attemptsLeft > 1) {
+                        return new Promise(function(r) { setTimeout(r, 450); }).then(function() {
+                            return fetchDashboardJson(url, attemptsLeft - 1);
+                        });
+                    }
+                    throw err;
+                });
+        }
+
+        /** "2026-10-03" → локальная полночь (new Date("2026-10-03") даёт полночь UTC). */
+        function parseDay(s) {
+            if (!s) return new Date(NaN);
+            const p = String(s).split('-').map(Number);
+            return new Date(p[0], p[1] - 1, p[2]);
+        }
+
+        /** Статистика по броням, пересекающимся с выбранным месяцем (отменённые /dashboard не отдаёт). */
+        function renderStats(data) {
+            const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+            const daysInMonth = Math.round((monthEnd - monthStart) / 86400000);
+            const serials = new Set((data || []).map(d => d.serial));
+
+            let rentals = 0, days = 0, delivery = 0;
+            (data || []).forEach(d => {
+                const start = parseDay(d.start);
+                const end = parseDay(d.end);
+                if (isNaN(start) || isNaN(end)) return;
+                const from = start > monthStart ? start : monthStart;
+                const endExclusive = new Date(end.getFullYear(), end.getMonth(), end.getDate() + 1);
+                const to = endExclusive < monthEnd ? endExclusive : monthEnd;
+                if (to <= from) return;
+                rentals++;
+                days += Math.round((to - from) / 86400000);
+                if (d.delivery) delivery++;
+            });
+
+            const capacity = serials.size * daysInMonth;
+            document.getElementById('statRentals').textContent = rentals;
+            document.getElementById('statDays').textContent = days;
+            document.getElementById('statLoad').textContent = capacity ? Math.round(days / capacity * 100) + '%' : '—';
+            document.getElementById('statLoadLabel').textContent =
+                'Загрузка парка (' + serials.size + ' чем. × ' + daysInMonth + ' дн.)';
+            document.getElementById('statDelivery').textContent = delivery;
+        }
+
+        // Загрузка данных
+        function loadData() {
+            setLoading(true);
+            chartContainer.innerHTML = '';
+
+            if (typeof d3 === 'undefined') {
+                showChartLoadError('Не загружена библиотека графика (d3). Обновите страницу с полным сбросом кэша (Ctrl+Shift+R).');
+                setLoading(false);
+                return;
+            }
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+            const url = '/dashboard?year=' + year + '&month=' + month;
+
+            fetchDashboardJson(url, 4)
+                .then(function(data) {
+                    currentData = data;
+                    setLoading(false);
+                    renderStats(data);
+                    scheduleRenderGantt();
+                })
+                .catch(function(error) {
+                    console.error('Ошибка:', error);
+                    showChartLoadError(String(error.message || error));
+                    setLoading(false);
+                });
+        }
+
+        // Отрисовка диаграммы
+        function renderGanttChart() {
+            if (typeof d3 === 'undefined') {
+                showChartLoadError('Библиотека d3 недоступна.');
+                return;
+            }
+            // Очищаем предыдущую диаграмму
+            d3.select("#gantt-chart").selectAll("*").remove();
+
+            if (!currentData || currentData.length === 0) {
+                chartContainer.innerHTML = `
+                        <div class="no-data">
+                            <div class="no-data-icon">📅</div>
+                            <div>Нет данных за выбранный период</div>
+                        </div>
+                    `;
+                return;
+            }
+
+            // Преобразуем даты и определяем статус
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            currentData.forEach(d => {
+                d.startDate = parseDay(d.start);
+                d.endDate = parseDay(d.end);
+                d.duration = (d.endDate - d.startDate) / (1000 * 60 * 60 * 24) + 1;
+
+                // Определяем статус
+                if (d.endDate < today) {
+                    d.status = 'Завершено';
+                    d.statusClass = 'past';
+                } else if (d.startDate > today) {
+                    d.status = 'Предстоящее';
+                    d.statusClass = 'upcoming';
+                } else {
+                    d.status = 'Активно';
+                    d.statusClass = 'active';
+                }
+            });
+
+            // Определяем границы месяца (monthEnd — начало следующего месяца, чтобы последний день имел ширину)
+            const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+            const DAY_MS = 24 * 60 * 60 * 1000;
+            const barStart = d => d.startDate > monthStart ? d.startDate : monthStart;
+            const barEnd = d => {
+                const end = new Date(d.endDate.getTime() + DAY_MS);
+                return end < monthEnd ? end : monthEnd;
+            };
+
+            // Строки — все чемоданы, бары — только брони, пересекающиеся с месяцем
+            const serials = Array.from(new Set(currentData.map(d => d.serial)));
+            const monthData = currentData.filter(d =>
+                !isNaN(d.startDate) && !isNaN(d.endDate) && d.startDate < monthEnd && d.endDate >= monthStart);
+
+            // Настройки диаграммы: высота строки подбирается под оставшуюся высоту окна
+            const margin = {top: 30, right: 30, bottom: 50, left: 120};
+            const containerWidth = measureChartWidth();
+            const width = Math.max(120, containerWidth - margin.left - margin.right);
+            const chartTop = chartContainer.getBoundingClientRect().top + window.scrollY;
+            const available = window.innerHeight - chartTop - 60 - margin.top - margin.bottom;
+            const rowHeight = Math.max(18, Math.min(44, Math.floor(available / serials.length)));
+            const height = serials.length * rowHeight;
+
+            // Создаем SVG
+            const svg = d3.select("#gantt-chart")
+                .append("svg")
+                .attr("width", "100%")
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Шкала X (только текущий месяц)
+            const x = d3.scaleTime()
+                .domain([monthStart, monthEnd])
+                .range([0, width]);
+
+            // Шкала Y (по серийным номерам)
+            const y = d3.scaleBand()
+                .domain(serials)
+                .range([0, height])
+                .padding(0.25);
+
+            // Сетка по дням
+            svg.append("g")
+                .attr("class", "grid")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(d3.timeDay.every(1))
+                    .tickSize(-height)
+                    .tickFormat(""));
+
+            // Ось X с датами
+            svg.append("g")
+                .attr("class", "axis axis--x")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .tickValues(d3.timeDay.range(monthStart, monthEnd))
+                    .tickFormat(d => {
+                        // На узком экране подписываем не каждый день, чтобы числа не слипались
+                        const step = width < 400 ? 5 : width < 700 ? 2 : 1;
+                        return (d.getDate() - 1) % step === 0 ? d3.timeFormat("%d")(d) : "";
+                    }));
+
+            // Ось Y с серийными номерами
+            svg.append("g")
+                .attr("class", "axis axis--y")
+                .call(d3.axisLeft(y));
+
+            // Линия текущего дня
+            if (today >= monthStart && today < monthEnd) {
+                svg.append("line")
+                    .attr("class", "current-day-line")
+                    .attr("x1", x(today))
+                    .attr("x2", x(today))
+                    .attr("y1", 0)
+                    .attr("y2", height);
+
+                svg.append("text")
+                    .attr("x", x(today) + 4)
+                    .attr("y", -8)
+                    .attr("fill", "var(--yandex-red)")
+                    .style("font-size", "11px")
+                    .style("font-weight", "500")
+                    .text("Сегодня");
+            }
+
+            // Бары диаграммы с классами статуса
+            const bars = svg.selectAll(".bar")
+                .data(monthData)
+                .enter()
+                .append("rect")
+                .attr("class", d => `bar ${d.statusClass}`)
+                .attr("x", d => x(barStart(d)))
+                .attr("y", d => y(d.serial))
+                .attr("width", d => Math.max(1, x(barEnd(d)) - x(barStart(d))))
+                .attr("height", y.bandwidth());
+
+            // Добавляем иконки доставки (грузовик)
+            svg.selectAll(".delivery-icon")
+                .data(monthData.filter(d => d.delivery))
+                .enter()
+                .append("text")
+                .attr("class", "delivery-icon")
+                .attr("x", d => (x(barStart(d)) + x(barEnd(d))) / 2)
+                .attr("y", d => y(d.serial) + y.bandwidth() / 2)
+                .text("🚚");
+
+            // Анимация при наведении
+            bars.on("mouseover", function(event, d) {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("y", y(d.serial) - 2)
+                    .attr("height", y.bandwidth() + 4);
+
+                tooltip.html(`
+                        <div class="tooltip-title">Бронирование чемодана</div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Номер:</span>
+                            <span class="tooltip-value">${d.serial}</span>
+                        </div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Клиент:</span>
+                            <span class="tooltip-value">${d.name}</span>
+                        </div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Телефон:</span>
+                            <span class="tooltip-value">${d.phone}</span>
+                        </div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Период:</span>
+                            <span class="tooltip-value">${d.start} — ${d.end}</span>
+                        </div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Длительность:</span>
+                            <span class="tooltip-value">${d.duration} дней</span>
+                        </div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Доставка:</span>
+                            <span class="tooltip-value">${d.delivery ? 'Да 🚚' : 'Нет'}</span>
+                        </div>
+                        <div class="tooltip-row">
+                            <span class="tooltip-label">Статус:</span>
+                            <span class="tooltip-value">${d.status}</span>
+                        </div>
+                    `)
+                    .style("left", (event.pageX + 15) + "px")
+                    .style("top", (event.pageY - 30) + "px")
+                    .classed("show", true);
+            })
+                .on("mouseout", function() {
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                        .attr("y", d => y(d.serial))
+                        .attr("height", y.bandwidth());
+
+                    tooltip.classed("show", false);
+                })
+                .on("dblclick", function(event, d) {
+                    openModal(d);
+                });
+
+            // Подписи осей
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("x", width / 2)
+                .attr("y", height + margin.bottom - 10)
+                .style("text-anchor", "middle")
+                .text("Дни месяца");
+
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("transform", "rotate(-90)")
+                .attr("y", -margin.left + 20)
+                .attr("x", -height / 2)
+                .style("text-anchor", "middle")
+                .text("Серийный номер");
+        }
+
+        // Навигация по месяцам
+        prevMonthBtn.addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            updateMonthDisplay();
+            loadData();
+        });
+
+        nextMonthBtn.addEventListener('click', function() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            updateMonthDisplay();
+            loadData();
+        });
+
+        // Кнопка обновления
+        refreshBtn.addEventListener('click', function() {
+            loadData();
+            document.dispatchEvent(new Event('admin:refresh'));
+        });
+        // Заказ подтверждён/отменён в блоке ниже — перерисовываем график и статистику
+        document.addEventListener('admin:orders-changed', loadData);
+
+        // Инициализация
+        updateMonthDisplay();
+        loadData();
+
+        // Адаптация к изменению размера окна
+        window.addEventListener('resize', function() {
+            if (currentData && currentData.length > 0) {
+                scheduleRenderGantt();
+            }
+        });
+
+        const chartWrap = chartContainer.closest('.chart-container');
+        if (chartWrap && typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(function() {
+                if (currentData && currentData.length > 0) {
+                    scheduleRenderGantt();
+                }
+            }).observe(chartWrap);
+        }
+    });
+</script>
+
+<!-- Push-уведомления (PWA) -->
+<script>
+(function () {
+    const hint = document.getElementById('pushHint');
+    const enableBtn = document.getElementById('pushEnableBtn');
+    const testBtn = document.getElementById('pushTestBtn');
+    const disableBtn = document.getElementById('pushDisableBtn');
+
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const standalone = window.navigator.standalone === true ||
+        window.matchMedia('(display-mode: standalone)').matches;
+    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+    function show(text, buttons) {
+        hint.textContent = text;
+        enableBtn.hidden = !(buttons || []).includes('enable');
+        testBtn.hidden = !(buttons || []).includes('test');
+        disableBtn.hidden = !(buttons || []).includes('disable');
+    }
+
+    function api(url, options) {
+        return fetch(url, Object.assign({ credentials: 'same-origin', cache: 'no-store' }, options || {}))
+            .then(function (res) {
+                if (res.status === 401) {
+                    window.location.reload();
+                    return new Promise(function () {});
+                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.status === 204 ? null : res.json();
+            });
+    }
+
+    function saveSubscription(sub) {
+        return api('/push/subscriptions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sub.toJSON())
+        });
+    }
+
+    function urlBase64ToUint8Array(base64) {
+        const padded = (base64 + '='.repeat((4 - base64.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(padded);
+        return Uint8Array.from(raw, c => c.charCodeAt(0));
+    }
+
+    if (!supported) {
+        if (isIOS && !standalone) {
+            show('Чтобы получать уведомления на iPhone: в Safari нажмите «Поделиться» → «На экран Домой», ' +
+                'откройте BikeBoxGo с экрана Домой и нажмите здесь «Включить».');
+        } else {
+            show('Этот браузер не поддерживает push-уведомления.');
+        }
+        return;
+    }
+
+    let registration = null;
+
+    function refreshState() {
+        return registration.pushManager.getSubscription().then(function (sub) {
+            if (Notification.permission === 'denied') {
+                show('Уведомления запрещены. Разрешите их в настройках: Настройки → Уведомления → BikeBoxGo.');
+            } else if (sub && Notification.permission === 'granted') {
+                show('Включены на этом устройстве.', ['test', 'disable']);
+                // Держим подписку на сервере актуальной (например, после переустановки)
+                return saveSubscription(sub).catch(function () {});
+            } else {
+                show(isIOS && !standalone
+                    ? 'Сначала добавьте сайт на экран «Домой» (Поделиться → «На экран Домой») и откройте его оттуда.'
+                    : 'Выключены на этом устройстве.', isIOS && !standalone ? [] : ['enable']);
+            }
+        });
+    }
+
+    enableBtn.addEventListener('click', function () {
+        enableBtn.disabled = true;
+        // Разрешение на iOS можно запросить только по нажатию кнопки
+        Notification.requestPermission()
+            .then(function (permission) {
+                if (permission !== 'granted') throw new Error('разрешение не выдано');
+                return Promise.all([api('/push/public-key'), registration.pushManager.getSubscription()]);
+            })
+            .then(function (res) {
+                // Старая подписка могла быть сделана с другим ключом — пересоздаём
+                return (res[1] ? res[1].unsubscribe() : Promise.resolve()).then(function () {
+                    return registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(res[0].publicKey)
+                    });
+                });
+            })
+            .then(saveSubscription)
+            .then(refreshState)
+            .catch(function (e) {
+                show('Не удалось включить: ' + e.message, ['enable']);
+            })
+            .finally(function () {
+                enableBtn.disabled = false;
+            });
+    });
+
+    testBtn.addEventListener('click', function () {
+        testBtn.disabled = true;
+        api('/push/test', { method: 'POST' })
+            .then(function (res) {
+                show('Тест отправлен на ' + res.subscriptions + ' устр. Уведомление придёт через пару секунд.',
+                    ['test', 'disable']);
+            })
+            .catch(function (e) {
+                show('Не удалось отправить тест: ' + e.message, ['test', 'disable']);
+            })
+            .finally(function () {
+                testBtn.disabled = false;
+            });
+    });
+
+    disableBtn.addEventListener('click', function () {
+        registration.pushManager.getSubscription()
+            .then(function (sub) {
+                if (!sub) return null;
+                return api('/push/subscriptions', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: sub.endpoint })
+                }).then(function () {
+                    return sub.unsubscribe();
+                });
+            })
+            .then(refreshState)
+            .catch(function (e) {
+                show('Не удалось выключить: ' + e.message, ['test', 'disable']);
+            });
+    });
+
+    navigator.serviceWorker.register('/admin-sw.js', { scope: '/admin' })
+        .then(function (reg) {
+            registration = reg;
+            return refreshState();
+        })
+        .catch(function (e) {
+            show('Не удалось подключить service worker: ' + e.message);
+        });
+})();
+</script>
+
+<!-- Состояние сервисов -->
+<script>
+(function () {
+    const grid = document.getElementById('servicesGrid');
+    const meta = document.getElementById('servicesMeta');
+    const REFRESH_MS = 30000;
+
+    const COMPONENT_LABELS = {
+        db: 'Postgres', rabbit: 'RabbitMQ', diskSpace: 'Диск', mail: 'SMTP (почта)', http: 'HTTP', ssl: 'SSL-сертификат'
+    };
+    // Служебные индикаторы Spring Cloud — в админке не нужны
+    const HIDDEN = ['ping', 'refreshScope', 'discoveryComposite', 'reactiveDiscoveryClients', 'discoveryClient'];
+    const STATE_TEXT = {
+        UP: 'Работает', DOWN: 'Сбой', OUT_OF_SERVICE: 'Выведен из работы', UNKNOWN: 'Неизвестно',
+        UNREACHABLE: 'Недоступен'
+    };
+
+    function tone(status) {
+        if (status === 'UP') return 'st-up';
+        if (status === 'DOWN' || status === 'UNREACHABLE') return 'st-down';
+        return 'st-warn';
+    }
+
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderService(svc) {
+        const components = (svc.components || [])
+            .filter(c => HIDDEN.indexOf(c.name) === -1)
+            .map(c => '<li><span class="dot ' + tone(c.status) + '"></span><span>' +
+                esc(COMPONENT_LABELS[c.name] || c.name) + '</span>' +
+                (c.detail ? '<span class="component-detail">' + esc(c.detail) + '</span>' : '') + '</li>')
+            .join('');
+        return '<div class="service-card ' + tone(svc.status) + '">' +
+            '<div class="service-head"><span class="service-name">' + esc(svc.name) + '</span>' +
+            (svc.latencyMs != null ? '<span class="service-latency">' + svc.latencyMs + ' мс</span>' : '') + '</div>' +
+            '<div class="service-state">' + esc(STATE_TEXT[svc.status] || svc.status) + '</div>' +
+            (components ? '<ul class="service-components">' + components + '</ul>' : '') +
+            (svc.error ? '<div class="service-error">' + esc(svc.error) + '</div>' : '') +
+            '</div>';
+    }
+
+    function loadStatus() {
+        fetch('/admin/api/status', { credentials: 'same-origin', cache: 'no-store' })
+            .then(function (res) {
+                if (res.status === 401) {
+                    // Сессия истекла: перезагрузка отправит на /login и после входа вернёт сюда
+                    window.location.reload();
+                    return new Promise(function () {});
+                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (report) {
+                const services = report.services || [];
+                grid.innerHTML = services.map(renderService).join('');
+                const bad = services.filter(s => s.status !== 'UP').length;
+                const time = new Date(report.checkedAt).toLocaleTimeString('ru-RU');
+                meta.textContent = (bad ? 'Есть проблемы: ' + bad + ' из ' + services.length : 'Все сервисы работают') +
+                    ' · проверено в ' + time;
+            })
+            .catch(function (e) {
+                meta.textContent = 'Не удалось получить статус: ' + e.message;
+            });
+    }
+
+    loadStatus();
+    setInterval(function () {
+        if (!document.hidden) loadStatus();
+    }, REFRESH_MS);
+    document.addEventListener('admin:refresh', loadStatus);
+})();
+</script>
+
+<!-- Управление заказами -->
+<script>
+(function () {
+    const statusLine = document.getElementById('statusLine');
+    const contentArea = document.getElementById('ordersArea');
+    const filterPendingOnly = document.getElementById('filterPendingOnly');
+    const countBadge = document.getElementById('countBadge');
+    const sortSelect = document.getElementById('sortSelect');
+
+    let allOrders = [];
+
+    /** Порядок статусов для сортировки «по этапу» */
+    var STATUS_SORT_ORDER = { PENDING: 0, IN_USE: 1, CONFIRMED: 2, COMPLETED: 3, CANCELLED: 4 };
+
+    const statusLabels = {
+        PENDING: 'Ожидает',
+        IN_USE: 'В использовании',
+        CONFIRMED: 'Подтверждён',
+        CANCELLED: 'Отменён',
+        COMPLETED: 'Завершён'
+    };
+
+    function statusLabel(s) {
+        return statusLabels[s] || s;
+    }
+
+    function setStatus(msg, isError) {
+        statusLine.textContent = msg || '';
+        statusLine.classList.toggle('error', !!isError);
+    }
+
+    function canConfirm(status) {
+        return status === 'PENDING';
+    }
+
+    function canCancel(status) {
+        return status !== 'CANCELLED' && status !== 'COMPLETED';
+    }
+
+    function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function getFilteredRows() {
+        if (!filterPendingOnly.checked) return allOrders.slice();
+        return allOrders.filter(function (r) { return r.status === 'PENDING'; });
+    }
+
+    function sortRows(rows) {
+        var parts = (sortSelect.value || 'startDate:desc').split(':');
+        var key = parts[0];
+        var dirMul = parts[1] === 'asc' ? 1 : -1;
+        var copy = rows.slice();
+        copy.sort(function (a, b) {
+            var cmp = 0;
+            if (key === 'startDate') {
+                var sa = a.startDate || '';
+                var sb = b.startDate || '';
+                cmp = sa < sb ? -1 : (sa > sb ? 1 : 0);
+            } else if (key === 'fullName') {
+                var fa = (a.fullName || '').trim().toLowerCase();
+                var fb = (b.fullName || '').trim().toLowerCase();
+                if (!fa && !fb) cmp = 0;
+                else if (!fa) cmp = 1;
+                else if (!fb) cmp = -1;
+                else cmp = fa.localeCompare(fb, 'ru');
+            } else if (key === 'status') {
+                var oa = STATUS_SORT_ORDER.hasOwnProperty(a.status) ? STATUS_SORT_ORDER[a.status] : 99;
+                var ob = STATUS_SORT_ORDER.hasOwnProperty(b.status) ? STATUS_SORT_ORDER[b.status] : 99;
+                cmp = oa - ob;
+                if (cmp === 0) cmp = String(a.status || '').localeCompare(String(b.status || ''));
+            }
+            return dirMul * cmp;
+        });
+        return copy;
+    }
+
+    function updateCountBadge(shown, total) {
+        if (!total && !allOrders.length) {
+            countBadge.innerHTML = '';
+            return;
+        }
+        countBadge.innerHTML = filterPendingOnly.checked
+            ? 'Показано: <strong>' + shown + '</strong> из ' + total + ' (только ожидают)'
+            : 'Всего заказов: <strong>' + total + '</strong>';
+    }
+
+    function renderTable(rows) {
+        const total = allOrders.length;
+        updateCountBadge(rows.length, total);
+
+        if (!rows.length) {
+            var msg = filterPendingOnly.checked && total > 0
+                ? 'Нет заказов в статусе «Ожидает»'
+                : 'Нет заказов';
+            contentArea.innerHTML = '<div class="orders-placeholder">' + msg + '</div>';
+            return;
+        }
+
+        function cellText(val) {
+            if (val == null || val === '') return '—';
+            return escapeHtml(val);
+        }
+
+        function rowDesktop(r) {
+            var id = r.id;
+            var badgeClass = 'status-badge st-' + (r.status || '').replace(/[^A-Z_]/g, '_');
+            var cDisabled = canConfirm(r.status) ? '' : 'disabled';
+            var xDisabled = canCancel(r.status) ? '' : 'disabled';
+            return '<tr data-id="' + escapeHtml(id) + '">' +
+                '<td class="mono">' + escapeHtml(id) + '</td>' +
+                '<td class="mono">' + (r.suitcaseId ? escapeHtml(r.suitcaseId) : '—') + '</td>' +
+                '<td>' + cellText(r.fullName) + '</td>' +
+                '<td class="mono">' + cellText(r.phone) + '</td>' +
+                '<td>' + escapeHtml(r.startDate || '—') + '</td>' +
+                '<td>' + escapeHtml(r.endDate || '—') + '</td>' +
+                '<td><span class="' + badgeClass + '">' + escapeHtml(statusLabel(r.status)) + '</span><br><small class="mono">' + escapeHtml(r.status || '') + '</small></td>' +
+                '<td class="actions">' +
+                '<button type="button" class="order-btn btn-confirm" data-action="confirm" data-id="' + escapeHtml(id) + '" ' + cDisabled + '>Подтвердить</button>' +
+                '<button type="button" class="order-btn btn-cancel" data-action="cancel" data-id="' + escapeHtml(id) + '" ' + xDisabled + '>Отменить</button>' +
+                '</td></tr>';
+        }
+
+        function rowMobile(r) {
+            var id = r.id;
+            var badgeClass = 'status-badge st-' + (r.status || '').replace(/[^A-Z_]/g, '_');
+            var cDisabled = canConfirm(r.status) ? '' : 'disabled';
+            var xDisabled = canCancel(r.status) ? '' : 'disabled';
+            return '<article class="order-card" data-id="' + escapeHtml(id) + '">' +
+                '<div class="order-card-header">' +
+                '<span class="' + badgeClass + '">' + escapeHtml(statusLabel(r.status)) + '</span>' +
+                '</div>' +
+                '<div class="order-card-row"><span>Бронь</span><span class="mono">' + escapeHtml(id) + '</span></div>' +
+                '<div class="order-card-row"><span>Чемодан</span><span class="mono">' + escapeHtml(r.suitcaseId || '—') + '</span></div>' +
+                '<div class="order-card-row"><span>ФИО</span><span>' + cellText(r.fullName) + '</span></div>' +
+                '<div class="order-card-row"><span>Телефон</span><span class="mono">' + cellText(r.phone) + '</span></div>' +
+                '<div class="order-card-row"><span>Период</span><span>' + escapeHtml(r.startDate || '—') + ' — ' + escapeHtml(r.endDate || '—') + '</span></div>' +
+                '<div class="order-card-row"><span>Статус API</span><span class="mono">' + escapeHtml(r.status || '') + '</span></div>' +
+                '<div class="order-card-actions">' +
+                '<button type="button" class="order-btn btn-confirm" data-action="confirm" data-id="' + escapeHtml(id) + '" ' + cDisabled + '>Подтвердить</button>' +
+                '<button type="button" class="order-btn btn-cancel" data-action="cancel" data-id="' + escapeHtml(id) + '" ' + xDisabled + '>Отменить</button>' +
+                '</div></article>';
+        }
+
+        var thead = '<tr><th>ID брони</th><th>Чемодан</th><th>ФИО</th><th>Телефон</th><th>Начало</th><th>Окончание</th><th>Статус</th><th>Действия</th></tr>';
+        var desktopBody = rows.map(rowDesktop).join('');
+        var mobileBody = rows.map(rowMobile).join('');
+
+        contentArea.innerHTML =
+            '<div class="orders-desktop"><div class="table-scroll"><table class="orders-table"><thead>' + thead + '</thead><tbody>' +
+            desktopBody + '</tbody></table></div></div>' +
+            '<div class="orders-mobile">' + mobileBody + '</div>';
+
+        contentArea.querySelectorAll('button[data-action]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var action = btn.getAttribute('data-action');
+                var bid = btn.getAttribute('data-id');
+                if (action === 'confirm') postAction(bid, 'confirm');
+                if (action === 'cancel') postAction(bid, 'cancel');
+            });
+        });
+    }
+
+    function applyFilterAndRender() {
+        renderTable(sortRows(getFilteredRows()));
+    }
+
+    /** Сессия истекла: перезагрузка страницы отправит на /login и после входа вернёт сюда. */
+    function reloginAndStop() {
+        window.location.reload();
+        return new Promise(function () {});
+    }
+
+    function loadOrders(keepStatus) {
+        if (keepStatus !== true) setStatus('');
+        contentArea.innerHTML = '<div class="orders-placeholder">Загрузка…</div>';
+
+        fetch('/booking')
+            .then(function (res) {
+                if (res.status === 401) return reloginAndStop();
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                if (!Array.isArray(data)) throw new Error('Ожидался массив');
+                allOrders = data;
+                applyFilterAndRender();
+            })
+            .catch(function (e) {
+                setStatus('Не удалось загрузить заказы: ' + e.message, true);
+                allOrders = [];
+                contentArea.innerHTML = '<div class="orders-placeholder">Ошибка загрузки</div>';
+                updateCountBadge(0, 0);
+            });
+    }
+
+    function postAction(id, kind) {
+        setStatus('Выполняется…');
+        var url = '/booking/' + id + '/' + (kind === 'confirm' ? 'confirm' : 'cancel');
+
+        fetch(url, { method: 'POST' })
+            .then(function (res) {
+                if (res.status === 401) return reloginAndStop();
+                if (res.status === 404) throw new Error('Заказ не найден');
+                if (res.status === 409) throw new Error(kind === 'confirm'
+                    ? 'Нельзя подтвердить в этом статусе'
+                    : 'Нельзя отменить (например, уже завершён)');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.text();
+            })
+            .then(function (body) {
+                setStatus('Готово: ' + statusLabel((body || '').replace(/"/g, '').trim()));
+                loadOrders(true);
+                document.dispatchEvent(new Event('admin:orders-changed'));
+            })
+            .catch(function (e) {
+                setStatus(e.message || 'Ошибка', true);
+            });
+    }
+
+    // Общая кнопка «Обновить» в шапке страницы
+    document.addEventListener('admin:refresh', loadOrders);
+    filterPendingOnly.addEventListener('change', applyFilterAndRender);
+    sortSelect.addEventListener('change', applyFilterAndRender);
+    loadOrders();
+})();
+</script>
+</body>
+</html>
