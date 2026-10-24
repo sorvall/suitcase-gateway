@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
@@ -14,28 +12,14 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.server.DelegatingServerAuthenticationEntryPoint;
-import org.springframework.security.web.server.DelegatingServerAuthenticationEntryPoint.DelegateEntry;
 import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
-import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
-import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint;
-import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
-import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
     public static final String ADMIN_USER = "admin";
-
-    /**
-     * API админки: заказы, график и push-подписки (проксируются в suitcase-booking), статус сервисов и actuator gateway.
-     * Без входа отвечает 401, а не редиректом на страницу логина.
-     */
-    private static final String[] ADMIN_API = {"/booking", "/booking/**", "/dashboard", "/dashboard/**",
-            "/push/**", "/admin/api/**", "/actuator/**"};
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
@@ -45,22 +29,14 @@ public class SecurityConfig {
                         .pathMatchers("/", "/css/**", "/images/**", "/js/**", "/static/**").permitAll()
                         .pathMatchers("/favicon.ico", "/robots.txt", "/sitemap.xml").permitAll()
                         .pathMatchers("/yandex_*").permitAll()
-                        // Публичная форма на сайте: проверка доступности и создание брони
-                        .pathMatchers(HttpMethod.GET, "/availability", "/availability/**").permitAll()
-                        .pathMatchers(HttpMethod.POST, "/booking").permitAll()
-                        // Для внешнего мониторинга открыт только общий health
-                        .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
-                        // Админка: страницы и API со списком заказов, подтверждением/отменой и графиком
-                        .pathMatchers("/admin", "/orders", "/dashboard-page").authenticated()
-                        .pathMatchers(ADMIN_API).authenticated()
+                        .pathMatchers("/booking/**", "/availability/**").permitAll()
+                        .pathMatchers("/actuator/**").permitAll()
+                        .pathMatchers("/orders", "/dashboard-page").authenticated()
+                        .pathMatchers("/dashboard", "/dashboard/**").permitAll()
                         .anyExchange().permitAll()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        // После входа — на страницу, куда шли, иначе в админку
-                        .authenticationSuccessHandler(new RedirectServerAuthenticationSuccessHandler("/admin")))
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint()))
+                .formLogin(form -> form.loginPage("/login"))
                 .logout(logout -> {
                     RedirectServerLogoutSuccessHandler successHandler = new RedirectServerLogoutSuccessHandler();
                     successHandler.setLogoutSuccessUrl(URI.create("/"));
@@ -68,15 +44,6 @@ public class SecurityConfig {
                 })
                 .csrf(ServerHttpSecurity.CsrfSpec::disable);
         return http.build();
-    }
-
-    private static ServerAuthenticationEntryPoint authenticationEntryPoint() {
-        DelegateEntry api = new DelegateEntry(
-                ServerWebExchangeMatchers.pathMatchers(ADMIN_API),
-                new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED));
-        DelegatingServerAuthenticationEntryPoint entryPoint = new DelegatingServerAuthenticationEntryPoint(api);
-        entryPoint.setDefaultEntryPoint(new RedirectServerAuthenticationEntryPoint("/login"));
-        return entryPoint;
     }
 
     @Bean

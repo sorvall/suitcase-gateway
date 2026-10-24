@@ -38,12 +38,6 @@ spring:
           predicates:
             - Path=/dashboard/**
 
-        # Подписка админки на push-уведомления (доступ только после входа — SecurityConfig)
-        - id: suitcase-booking
-          uri: http://suitcase-booking-container:8081  # Внутренний адрес контейнера
-          predicates:
-            - Path=/push/**
-
 management:
   endpoints:
     web:

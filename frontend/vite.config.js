@@ -13,7 +13,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        admin: resolve(__dirname, 'admin.html'),
+        orders: resolve(__dirname, 'orders.html'),
+        dashboardPage: resolve(__dirname, 'dashboard-page.html'),
         login: resolve(__dirname, 'login.html'),
       },
     },
