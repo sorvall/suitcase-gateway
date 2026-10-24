@@ -1,8 +1,12 @@
 package ru.sorokin.gateway.controller;
 
+import java.net.URI;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,13 +33,14 @@ public class HtmlDocumentController {
         return html("login.html");
     }
 
-    @GetMapping(value = "/orders", produces = MediaType.TEXT_HTML_VALUE)
-    public Mono<Resource> orders() {
-        return html("orders.html");
+    @GetMapping(value = "/admin", produces = MediaType.TEXT_HTML_VALUE)
+    public Mono<Resource> admin() {
+        return html("admin.html");
     }
 
-    @GetMapping(value = "/dashboard-page", produces = MediaType.TEXT_HTML_VALUE)
-    public Mono<Resource> dashboardPage() {
-        return html("dashboard-page.html");
+    /** Старые адреса админки (заказы и график) — теперь это одна страница /admin. */
+    @GetMapping({"/orders", "/dashboard-page"})
+    public ResponseEntity<Void> legacyAdminPages() {
+        return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).location(URI.create("/admin")).build();
     }
 }
