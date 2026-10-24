@@ -543,6 +543,78 @@
             text-decoration: none;
         }
 
+        /* Состояние сервисов */
+        .services-section {
+            padding: 20px 24px 0;
+        }
+
+        .services-meta {
+            font-size: 13px;
+            color: var(--yandex-dark-gray);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .service-card {
+            border: 1px solid var(--yandex-gray);
+            border-left: 4px solid var(--yandex-dark-gray);
+            border-radius: 12px;
+            padding: 12px 14px;
+            background-color: var(--yandex-white);
+        }
+
+        .service-card.st-up { border-left-color: #00B956; }
+        .service-card.st-warn { border-left-color: var(--yandex-yellow-dark); }
+        .service-card.st-down { border-left-color: var(--yandex-red); }
+
+        .service-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 8px;
+        }
+
+        .service-name { font-weight: 700; font-size: 15px; }
+        .service-latency { font-size: 12px; color: var(--yandex-dark-gray); font-variant-numeric: tabular-nums; }
+        .service-state { font-size: 13px; font-weight: 600; margin-top: 2px; }
+        .st-up .service-state { color: #00873E; }
+        .st-warn .service-state { color: #8a6d00; }
+        .st-down .service-state { color: var(--yandex-red); }
+
+        .service-components {
+            list-style: none;
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
+        }
+
+        .service-components li {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex: none;
+            background-color: var(--yandex-dark-gray);
+        }
+
+        .dot.st-up { background-color: #00B956; }
+        .dot.st-warn { background-color: var(--yandex-yellow-dark); }
+        .dot.st-down { background-color: var(--yandex-red); }
+        .component-detail { color: var(--yandex-dark-gray); word-break: break-word; }
+        .service-error { margin-top: 6px; font-size: 12px; color: var(--yandex-red); word-break: break-word; }
+
         /* Статистика за месяц */
         .stats-grid {
             display: grid;
@@ -733,7 +805,8 @@
         }
 
         @media (max-width: 768px) {
-            .orders-section .section-head {
+            .orders-section .section-head,
+            .services-section {
                 padding: 16px 16px 0;
             }
         }
@@ -809,6 +882,14 @@
                 <button type="submit" class="btn secondary">Выйти</button>
             </form>
         </div>
+    </div>
+
+    <div class="services-section">
+        <div class="section-head">
+            <h2 class="section-title">Состояние сервисов</h2>
+            <span class="services-meta" id="servicesMeta">Проверка…</span>
+        </div>
+        <div class="services-grid" id="servicesGrid"></div>
     </div>
 
     <div class="dashboard-content">
@@ -1434,6 +1515,82 @@
             }).observe(chartWrap);
         }
     });
+</script>
+
+<!-- Состояние сервисов -->
+<script>
+(function () {
+    const grid = document.getElementById('servicesGrid');
+    const meta = document.getElementById('servicesMeta');
+    const REFRESH_MS = 30000;
+
+    const COMPONENT_LABELS = {
+        db: 'Postgres', rabbit: 'RabbitMQ', diskSpace: 'Диск', mail: 'SMTP (почта)', http: 'HTTP', ssl: 'SSL-сертификат'
+    };
+    // Служебные индикаторы Spring Cloud — в админке не нужны
+    const HIDDEN = ['ping', 'refreshScope', 'discoveryComposite', 'reactiveDiscoveryClients', 'discoveryClient'];
+    const STATE_TEXT = {
+        UP: 'Работает', DOWN: 'Сбой', OUT_OF_SERVICE: 'Выведен из работы', UNKNOWN: 'Неизвестно',
+        UNREACHABLE: 'Недоступен'
+    };
+
+    function tone(status) {
+        if (status === 'UP') return 'st-up';
+        if (status === 'DOWN' || status === 'UNREACHABLE') return 'st-down';
+        return 'st-warn';
+    }
+
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderService(svc) {
+        const components = (svc.components || [])
+            .filter(c => HIDDEN.indexOf(c.name) === -1)
+            .map(c => '<li><span class="dot ' + tone(c.status) + '"></span><span>' +
+                esc(COMPONENT_LABELS[c.name] || c.name) + '</span>' +
+                (c.detail ? '<span class="component-detail">' + esc(c.detail) + '</span>' : '') + '</li>')
+            .join('');
+        return '<div class="service-card ' + tone(svc.status) + '">' +
+            '<div class="service-head"><span class="service-name">' + esc(svc.name) + '</span>' +
+            (svc.latencyMs != null ? '<span class="service-latency">' + svc.latencyMs + ' мс</span>' : '') + '</div>' +
+            '<div class="service-state">' + esc(STATE_TEXT[svc.status] || svc.status) + '</div>' +
+            (components ? '<ul class="service-components">' + components + '</ul>' : '') +
+            (svc.error ? '<div class="service-error">' + esc(svc.error) + '</div>' : '') +
+            '</div>';
+    }
+
+    function loadStatus() {
+        fetch('/admin/api/status', { credentials: 'same-origin', cache: 'no-store' })
+            .then(function (res) {
+                if (res.status === 401) {
+                    // Сессия истекла: перезагрузка отправит на /login и после входа вернёт сюда
+                    window.location.reload();
+                    return new Promise(function () {});
+                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (report) {
+                const services = report.services || [];
+                grid.innerHTML = services.map(renderService).join('');
+                const bad = services.filter(s => s.status !== 'UP').length;
+                const time = new Date(report.checkedAt).toLocaleTimeString('ru-RU');
+                meta.textContent = (bad ? 'Есть проблемы: ' + bad + ' из ' + services.length : 'Все сервисы работают') +
+                    ' · проверено в ' + time;
+            })
+            .catch(function (e) {
+                meta.textContent = 'Не удалось получить статус: ' + e.message;
+            });
+    }
+
+    loadStatus();
+    setInterval(function () {
+        if (!document.hidden) loadStatus();
+    }, REFRESH_MS);
+    document.addEventListener('admin:refresh', loadStatus);
+})();
 </script>
 
 <!-- Управление заказами -->

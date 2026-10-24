@@ -30,8 +30,12 @@ public class SecurityConfig {
 
     public static final String ADMIN_USER = "admin";
 
-    /** API заказов и графика, проксируемое в suitcase-booking; без входа отвечает 401, а не редиректом. */
-    private static final String[] ADMIN_API = {"/booking", "/booking/**", "/dashboard", "/dashboard/**"};
+    /**
+     * API админки: заказы и график (проксируются в suitcase-booking), статус сервисов и actuator gateway.
+     * Без входа отвечает 401, а не редиректом на страницу логина.
+     */
+    private static final String[] ADMIN_API = {"/booking", "/booking/**", "/dashboard", "/dashboard/**",
+            "/admin/api/**", "/actuator/**"};
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
@@ -44,7 +48,8 @@ public class SecurityConfig {
                         // Публичная форма на сайте: проверка доступности и создание брони
                         .pathMatchers(HttpMethod.GET, "/availability", "/availability/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/booking").permitAll()
-                        .pathMatchers("/actuator/**").permitAll()
+                        // Для внешнего мониторинга открыт только общий health
+                        .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         // Админка: страницы и API со списком заказов, подтверждением/отменой и графиком
                         .pathMatchers("/admin", "/orders", "/dashboard-page").authenticated()
                         .pathMatchers(ADMIN_API).authenticated()
