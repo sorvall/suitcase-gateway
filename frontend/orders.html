@@ -468,6 +468,12 @@
         renderTable(sortRows(getFilteredRows()));
     }
 
+    /** Сессия истекла: перезагрузка страницы отправит на /login и после входа вернёт сюда. */
+    function reloginAndStop() {
+        window.location.reload();
+        return new Promise(function () {});
+    }
+
     function loadOrders() {
         setStatus('');
         contentArea.innerHTML = '<div class="loading">Загрузка…</div>';
@@ -475,6 +481,7 @@
 
         fetch('/booking')
             .then(function (res) {
+                if (res.status === 401) return reloginAndStop();
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 return res.json();
             })
@@ -500,6 +507,7 @@
 
         fetch(url, { method: 'POST' })
             .then(function (res) {
+                if (res.status === 401) return reloginAndStop();
                 if (res.status === 404) throw new Error('Заказ не найден');
                 if (res.status === 409) throw new Error(kind === 'confirm'
                     ? 'Нельзя подтвердить в этом статусе'

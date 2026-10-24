@@ -813,6 +813,11 @@
         function fetchDashboardJson(url, attemptsLeft) {
             return fetch(url, { credentials: 'same-origin', cache: 'no-store' })
                 .then(function(response) {
+                    if (response.status === 401) {
+                        // Сессия истекла: перезагрузка отправит на /login и после входа вернёт сюда
+                        window.location.reload();
+                        return new Promise(function() {});
+                    }
                     return response.text().then(function(text) {
                         if (!response.ok) {
                             throw new Error('HTTP ' + response.status + ' ' + response.statusText);
