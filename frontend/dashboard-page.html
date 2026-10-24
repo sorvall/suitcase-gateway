@@ -182,7 +182,7 @@
         .chart-container {
             width: 100%;
             min-width: 280px;
-            min-height: min(420px, 50vh);
+            min-height: min(260px, 40vh);
             margin-top: 16px;
             border-radius: 12px;
             background-color: var(--yandex-white);
@@ -193,7 +193,7 @@
 
         .chart {
             width: 100%;
-            min-height: 380px;
+            min-height: 240px;
             display: block;
             padding: 10px;
             box-sizing: border-box;
@@ -903,11 +903,29 @@
                 }
             });
 
-            // Настройки диаграммы
+            // Определяем границы месяца (monthEnd — начало следующего месяца, чтобы последний день имел ширину)
+            const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+            const DAY_MS = 24 * 60 * 60 * 1000;
+            const barStart = d => d.startDate > monthStart ? d.startDate : monthStart;
+            const barEnd = d => {
+                const end = new Date(d.endDate.getTime() + DAY_MS);
+                return end < monthEnd ? end : monthEnd;
+            };
+
+            // Строки — все чемоданы, бары — только брони, пересекающиеся с месяцем
+            const serials = Array.from(new Set(currentData.map(d => d.serial)));
+            const monthData = currentData.filter(d =>
+                !isNaN(d.startDate) && !isNaN(d.endDate) && d.startDate < monthEnd && d.endDate >= monthStart);
+
+            // Настройки диаграммы: высота строки подбирается под оставшуюся высоту окна
             const margin = {top: 30, right: 30, bottom: 50, left: 120};
             const containerWidth = measureChartWidth();
             const width = Math.max(120, containerWidth - margin.left - margin.right);
-            const height = Math.max(400, currentData.length * 40) - margin.top - margin.bottom;
+            const chartTop = chartContainer.getBoundingClientRect().top + window.scrollY;
+            const available = window.innerHeight - chartTop - 60 - margin.top - margin.bottom;
+            const rowHeight = Math.max(18, Math.min(44, Math.floor(available / serials.length)));
+            const height = serials.length * rowHeight;
 
             // Создаем SVG
             const svg = d3.select("#gantt-chart")
@@ -917,10 +935,6 @@
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Определяем границы месяца
-            const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-            const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
             // Шкала X (только текущий месяц)
             const x = d3.scaleTime()
                 .domain([monthStart, monthEnd])
@@ -928,9 +942,9 @@
 
             // Шкала Y (по серийным номерам)
             const y = d3.scaleBand()
-                .domain(currentData.map(d => d.serial))
+                .domain(serials)
                 .range([0, height])
-                .padding(0.2);
+                .padding(0.25);
 
             // Сетка по дням
             svg.append("g")
@@ -946,8 +960,12 @@
                 .attr("class", "axis axis--x")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(x)
-                    .ticks(d3.timeDay.every(1))
-                    .tickFormat(d3.timeFormat("%d")));
+                    .tickValues(d3.timeDay.range(monthStart, monthEnd))
+                    .tickFormat(d => {
+                        // На узком экране подписываем не каждый день, чтобы числа не слипались
+                        const step = width < 400 ? 5 : width < 700 ? 2 : 1;
+                        return (d.getDate() - 1) % step === 0 ? d3.timeFormat("%d")(d) : "";
+                    }));
 
             // Ось Y с серийными номерами
             svg.append("g")
@@ -955,7 +973,7 @@
                 .call(d3.axisLeft(y));
 
             // Линия текущего дня
-            if (today >= monthStart && today <= monthEnd) {
+            if (today >= monthStart && today < monthEnd) {
                 svg.append("line")
                     .attr("class", "current-day-line")
                     .attr("x1", x(today))
@@ -974,30 +992,22 @@
 
             // Бары диаграммы с классами статуса
             const bars = svg.selectAll(".bar")
-                .data(currentData)
+                .data(monthData)
                 .enter()
                 .append("rect")
                 .attr("class", d => `bar ${d.statusClass}`)
-                .attr("x", d => x(d.startDate > monthStart ? d.startDate : monthStart))
+                .attr("x", d => x(barStart(d)))
                 .attr("y", d => y(d.serial))
-                .attr("width", d => {
-                    const start = d.startDate > monthStart ? d.startDate : monthStart;
-                    const end = d.endDate < monthEnd ? d.endDate : monthEnd;
-                    return Math.max(1, x(end) - x(start));
-                })
+                .attr("width", d => Math.max(1, x(barEnd(d)) - x(barStart(d))))
                 .attr("height", y.bandwidth());
 
             // Добавляем иконки доставки (грузовик)
             svg.selectAll(".delivery-icon")
-                .data(currentData.filter(d => d.delivery))
+                .data(monthData.filter(d => d.delivery))
                 .enter()
                 .append("text")
                 .attr("class", "delivery-icon")
-                .attr("x", d => {
-                    const start = d.startDate > monthStart ? d.startDate : monthStart;
-                    const end = d.endDate < monthEnd ? d.endDate : monthEnd;
-                    return x(start) + (x(end) - x(start)) / 2;
-                })
+                .attr("x", d => (x(barStart(d)) + x(barEnd(d))) / 2)
                 .attr("y", d => y(d.serial) + y.bandwidth() / 2)
                 .text("🚚");
 
