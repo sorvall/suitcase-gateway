@@ -31,11 +31,11 @@ public class SecurityConfig {
     public static final String ADMIN_USER = "admin";
 
     /**
-     * API админки: заказы и график (проксируются в suitcase-booking), статус сервисов и actuator gateway.
+     * API админки: заказы, график и push-подписки (проксируются в suitcase-booking), статус сервисов и actuator gateway.
      * Без входа отвечает 401, а не редиректом на страницу логина.
      */
     private static final String[] ADMIN_API = {"/booking", "/booking/**", "/dashboard", "/dashboard/**",
-            "/admin/api/**", "/actuator/**"};
+            "/push/**", "/admin/api/**", "/actuator/**"};
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {

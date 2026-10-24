@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Админка — BikeBoxGo</title>
+    <!-- PWA: установка на экран «Домой» и push-уведомления о новых заказах -->
+    <link rel="manifest" href="/pwa/manifest.json">
+    <meta name="theme-color" content="#FFDB4D">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BikeBoxGo">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="/pwa/apple-touch-icon.png">
     <!-- Локальная копия: на части ПК CDN d3js.org блокируется → график не строился -->
     <script src="/vendor/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=YSText:wght@400;500;700&display=swap" rel="stylesheet">
@@ -543,6 +551,31 @@
             text-decoration: none;
         }
 
+        /* Push-уведомления о заказах */
+        .push-bar {
+            margin: 20px 24px 0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background-color: var(--yandex-light-gray);
+            border: 1px solid var(--yandex-gray);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+        }
+
+        .push-text { font-size: 14px; }
+        .push-text strong { display: block; font-size: 15px; }
+        .push-hint { color: var(--yandex-dark-gray); font-size: 13px; }
+        .push-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .push-actions .btn { padding: 8px 14px; font-size: 13px; }
+        .push-actions .btn[hidden] { display: none; }
+
+        @media (max-width: 768px) {
+            .push-bar { margin: 16px 16px 0; }
+        }
+
         /* Состояние сервисов */
         .services-section {
             padding: 20px 24px 0;
@@ -881,6 +914,18 @@
             <form action="/logout" method="post" style="display:inline">
                 <button type="submit" class="btn secondary">Выйти</button>
             </form>
+        </div>
+    </div>
+
+    <div class="push-bar" id="pushBar">
+        <div class="push-text">
+            <strong>🔔 Уведомления о новых заказах</strong>
+            <span class="push-hint" id="pushHint">Проверка…</span>
+        </div>
+        <div class="push-actions">
+            <button type="button" class="btn" id="pushEnableBtn" hidden>Включить</button>
+            <button type="button" class="btn secondary" id="pushTestBtn" hidden>Тест</button>
+            <button type="button" class="btn secondary" id="pushDisableBtn" hidden>Выключить</button>
         </div>
     </div>
 
@@ -1515,6 +1560,152 @@
             }).observe(chartWrap);
         }
     });
+</script>
+
+<!-- Push-уведомления (PWA) -->
+<script>
+(function () {
+    const hint = document.getElementById('pushHint');
+    const enableBtn = document.getElementById('pushEnableBtn');
+    const testBtn = document.getElementById('pushTestBtn');
+    const disableBtn = document.getElementById('pushDisableBtn');
+
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const standalone = window.navigator.standalone === true ||
+        window.matchMedia('(display-mode: standalone)').matches;
+    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+    function show(text, buttons) {
+        hint.textContent = text;
+        enableBtn.hidden = !(buttons || []).includes('enable');
+        testBtn.hidden = !(buttons || []).includes('test');
+        disableBtn.hidden = !(buttons || []).includes('disable');
+    }
+
+    function api(url, options) {
+        return fetch(url, Object.assign({ credentials: 'same-origin', cache: 'no-store' }, options || {}))
+            .then(function (res) {
+                if (res.status === 401) {
+                    window.location.reload();
+                    return new Promise(function () {});
+                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.status === 204 ? null : res.json();
+            });
+    }
+
+    function saveSubscription(sub) {
+        return api('/push/subscriptions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sub.toJSON())
+        });
+    }
+
+    function urlBase64ToUint8Array(base64) {
+        const padded = (base64 + '='.repeat((4 - base64.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(padded);
+        return Uint8Array.from(raw, c => c.charCodeAt(0));
+    }
+
+    if (!supported) {
+        if (isIOS && !standalone) {
+            show('Чтобы получать уведомления на iPhone: в Safari нажмите «Поделиться» → «На экран Домой», ' +
+                'откройте BikeBoxGo с экрана Домой и нажмите здесь «Включить».');
+        } else {
+            show('Этот браузер не поддерживает push-уведомления.');
+        }
+        return;
+    }
+
+    let registration = null;
+
+    function refreshState() {
+        return registration.pushManager.getSubscription().then(function (sub) {
+            if (Notification.permission === 'denied') {
+                show('Уведомления запрещены. Разрешите их в настройках: Настройки → Уведомления → BikeBoxGo.');
+            } else if (sub && Notification.permission === 'granted') {
+                show('Включены на этом устройстве.', ['test', 'disable']);
+                // Держим подписку на сервере актуальной (например, после переустановки)
+                return saveSubscription(sub).catch(function () {});
+            } else {
+                show(isIOS && !standalone
+                    ? 'Сначала добавьте сайт на экран «Домой» (Поделиться → «На экран Домой») и откройте его оттуда.'
+                    : 'Выключены на этом устройстве.', isIOS && !standalone ? [] : ['enable']);
+            }
+        });
+    }
+
+    enableBtn.addEventListener('click', function () {
+        enableBtn.disabled = true;
+        // Разрешение на iOS можно запросить только по нажатию кнопки
+        Notification.requestPermission()
+            .then(function (permission) {
+                if (permission !== 'granted') throw new Error('разрешение не выдано');
+                return Promise.all([api('/push/public-key'), registration.pushManager.getSubscription()]);
+            })
+            .then(function (res) {
+                // Старая подписка могла быть сделана с другим ключом — пересоздаём
+                return (res[1] ? res[1].unsubscribe() : Promise.resolve()).then(function () {
+                    return registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(res[0].publicKey)
+                    });
+                });
+            })
+            .then(saveSubscription)
+            .then(refreshState)
+            .catch(function (e) {
+                show('Не удалось включить: ' + e.message, ['enable']);
+            })
+            .finally(function () {
+                enableBtn.disabled = false;
+            });
+    });
+
+    testBtn.addEventListener('click', function () {
+        testBtn.disabled = true;
+        api('/push/test', { method: 'POST' })
+            .then(function (res) {
+                show('Тест отправлен на ' + res.subscriptions + ' устр. Уведомление придёт через пару секунд.',
+                    ['test', 'disable']);
+            })
+            .catch(function (e) {
+                show('Не удалось отправить тест: ' + e.message, ['test', 'disable']);
+            })
+            .finally(function () {
+                testBtn.disabled = false;
+            });
+    });
+
+    disableBtn.addEventListener('click', function () {
+        registration.pushManager.getSubscription()
+            .then(function (sub) {
+                if (!sub) return null;
+                return api('/push/subscriptions', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: sub.endpoint })
+                }).then(function () {
+                    return sub.unsubscribe();
+                });
+            })
+            .then(refreshState)
+            .catch(function (e) {
+                show('Не удалось выключить: ' + e.message, ['test', 'disable']);
+            });
+    });
+
+    navigator.serviceWorker.register('/admin-sw.js', { scope: '/admin' })
+        .then(function (reg) {
+            registration = reg;
+            return refreshState();
+        })
+        .catch(function (e) {
+            show('Не удалось подключить service worker: ' + e.message);
+        });
+})();
 </script>
 
 <!-- Состояние сервисов -->
