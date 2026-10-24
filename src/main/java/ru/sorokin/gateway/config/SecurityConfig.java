@@ -20,6 +20,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
 import org.springframework.security.web.server.authentication.RedirectServerAuthenticationEntryPoint;
+import org.springframework.security.web.server.authentication.RedirectServerAuthenticationSuccessHandler;
 import org.springframework.security.web.server.authentication.logout.RedirectServerLogoutSuccessHandler;
 import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatchers;
 
@@ -45,12 +46,15 @@ public class SecurityConfig {
                         .pathMatchers(HttpMethod.POST, "/booking").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
                         // Админка: страницы и API со списком заказов, подтверждением/отменой и графиком
-                        .pathMatchers("/orders", "/dashboard-page").authenticated()
+                        .pathMatchers("/admin", "/orders", "/dashboard-page").authenticated()
                         .pathMatchers(ADMIN_API).authenticated()
                         .anyExchange().permitAll()
                 )
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .formLogin(form -> form.loginPage("/login"))
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        // После входа — на страницу, куда шли, иначе в админку
+                        .authenticationSuccessHandler(new RedirectServerAuthenticationSuccessHandler("/admin")))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint()))
                 .logout(logout -> {
                     RedirectServerLogoutSuccessHandler successHandler = new RedirectServerLogoutSuccessHandler();
