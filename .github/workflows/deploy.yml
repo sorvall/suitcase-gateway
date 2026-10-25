@@ -53,6 +53,17 @@ jobs:
           source: "Dockerfile"
           target: "/root/suitcase-app/gateway"
 
+      # Конфиг nginx, который принимает 80/443 и расшифровывает HTTPS перед gateway
+      - name: Copy nginx config to remote server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          source: "deploy/nginx/bikeboxgo.conf"
+          target: "/root/suitcase-app/gateway"
+          strip_components: 2
+
       # Шаг 3: Создаем Docker-сеть
       - name: Create Docker Network
         uses: appleboy/ssh-action@v0.1.5
@@ -81,5 +92,14 @@ jobs:
             # Построить новый образ
             docker build -t suitcase-gateway .
 
-            # Запустить новый контейнер и подключить его к сети
-            docker run -d --restart unless-stopped -p 443:443 --name suitcase-gateway-container --network suitcase-network suitcase-gateway
+            # Запустить новый контейнер и подключить его к сети (наружу его открывает nginx)
+            docker run -d --restart unless-stopped --name suitcase-gateway-container --network suitcase-network suitcase-gateway
+
+            # nginx на 80/443 перед gateway. Имя http-redirect оставлено прежним:
+            # его останавливает и запускает /usr/local/bin/update-ssl-cert.sh при продлении сертификата
+            docker rm -f http-redirect || true
+            docker run -d --restart unless-stopped --name http-redirect --network suitcase-network \
+              -p 80:80 -p 443:443 \
+              -v /etc/letsencrypt:/etc/letsencrypt:ro \
+              -v /root/suitcase-app/gateway/bikeboxgo.conf:/etc/nginx/conf.d/default.conf:ro \
+              nginx:1.27-alpine
